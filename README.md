@@ -166,6 +166,39 @@ article-checker --setup
 
 No database. No server. No cloud dependency beyond Copyscape.
 
+## Plagiarism Engines
+
+Article Checker currently uses [Copyscape](https://www.copyscape.com/) via its API.
+[Originality.ai](https://originality.ai/) is planned as a second engine (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+
+### Copyscape
+
+The industry standard for web plagiarism detection. Simple pay-as-you-go API — no subscription required.
+
+| | |
+|--|--|
+| **Cost** | $0.03 per search (up to 200 words) + $0.01 per extra 100 words |
+| **800-word article** | ~$0.09 per check |
+| **Minimum top-up** | $5 |
+| **API access** | Included with any account |
+| **Sign up** | [copyscape.com](https://www.copyscape.com/) |
+| **Get API key** | My Account → API |
+
+### Originality.ai *(planned)*
+
+Detects both AI-generated content and web plagiarism in a single check — useful if you also want to verify the article doesn't read as machine-generated.
+
+| | |
+|--|--|
+| **Pay as you go** | $30 one-time → 3,000 credits (1 credit = 100 words) |
+| **800-word article** | ~2 credits = ~$0.02 per check (AI + plagiarism) |
+| **Pro plan** | $14.95/month → 2,000 credits/month |
+| **API access** | Enterprise plan only ($179/month) |
+| **Sign up** | [originality.ai](https://originality.ai/) |
+
+> Originality.ai's API is Enterprise-only, so it's best used as a manual web tool alongside this CLI.
+> Contributions to add it as an optional engine are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## For Developers — Run from Source
 
 Requires [Bun](https://bun.sh).
