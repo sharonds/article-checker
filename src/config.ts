@@ -60,3 +60,10 @@ export function writeConfig(config: Partial<Config>): void {
     : {};
   writeFileSync(CONFIG_FILE, JSON.stringify({ ...existing, ...config }, null, 2));
 }
+
+/** @deprecated use writeConfig */
+export const saveConfig = writeConfig;
+
+export function configPath(): string {
+  return CONFIG_FILE;
+}
