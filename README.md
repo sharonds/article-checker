@@ -142,8 +142,12 @@ Copyscape API key:   ************
 ## Usage
 
 ```bash
-# Check an article
+# Check a Google Doc (must be shared publicly)
 article-checker "https://docs.google.com/document/d/XXXX/edit"
+
+# Check a local Markdown or text file
+article-checker ./my-article.md
+article-checker /absolute/path/to/article.txt
 
 # Re-run setup (to update credentials)
 article-checker --setup

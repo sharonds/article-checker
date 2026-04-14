@@ -23,7 +23,7 @@ bun src/index.tsx "https://docs.google.com/document/d/XXXX/edit"
 | `src/index.tsx` | Entry point — routes to setup or check |
 | `src/setup.tsx` | First-run credential wizard (Ink UI) |
 | `src/check.tsx` | Plagiarism check UI + report (Ink UI) |
-| `src/gdoc.ts` | Fetches plain text from a Google Doc |
+| `src/gdoc.ts` | Input reader — fetches Google Docs via public export URL or reads local `.md`/`.txt` files |
 | `src/copyscape.ts` | Copyscape API client + XML response parser |
 | `src/config.ts` | Reads/writes credentials to `~/.article-checker/config.json` |
 
