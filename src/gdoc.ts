@@ -1,10 +1,25 @@
 /**
- * Fetches plain text from a Google Doc.
+ * Fetches plain text from a Google Doc or reads a local file.
  *
- * Works automatically when the doc is set to "Anyone with the link can view".
- * For private docs, instruct the user to share the doc publicly or use
- * the Google Workspace CLI (gws) as a fallback.
+ * Google Docs: works automatically when the doc is shared publicly.
+ * Local files: pass an absolute path (/path/to/file.md), relative path
+ * (./file.md, ../file.md), or any path ending in .md or .txt.
  */
+import { existsSync, readFileSync } from "fs";
+
+/**
+ * Returns true when the argument looks like a local file path rather than
+ * a Google Doc URL or raw Doc ID.
+ */
+export function isLocalPath(input: string): boolean {
+  return (
+    input.startsWith("/") ||
+    input.startsWith("./") ||
+    input.startsWith("../") ||
+    input.endsWith(".md") ||
+    input.endsWith(".txt")
+  );
+}
 
 export function extractDocId(url: string): string {
   // Handles formats:
@@ -25,8 +40,18 @@ export function extractDocId(url: string): string {
   );
 }
 
-export async function fetchGoogleDoc(url: string): Promise<string> {
-  const docId = extractDocId(url);
+export async function fetchGoogleDoc(input: string): Promise<string> {
+  // Check if input is a local file path
+  if (isLocalPath(input)) {
+    if (!existsSync(input)) {
+      throw new Error(`File not found: ${input}`);
+    }
+    const raw = readFileSync(input, "utf-8");
+    return cleanText(raw);
+  }
+
+  // Otherwise, treat as Google Doc URL or ID
+  const docId = extractDocId(input);
   const exportUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
 
   const response = await fetch(exportUrl, {
@@ -66,9 +91,9 @@ export async function fetchGoogleDoc(url: string): Promise<string> {
 
 function cleanText(raw: string): string {
   return raw
-    .replace(/\r\n/g, "\n")      // normalise line endings
+    .replace(/\r\n/g, "\n") // normalise line endings
     .replace(/\r/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")  // collapse excessive blank lines
+    .replace(/\n{3,}/g, "\n\n") // collapse excessive blank lines
     .trim();
 }
 
