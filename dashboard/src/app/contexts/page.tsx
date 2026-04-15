@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FooterBar } from "@/components/footer-bar";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,21 +68,10 @@ export default function ContextsPage() {
   const [editContent, setEditContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [message, setMessage] = useState<{
-    text: string;
-    type: "success" | "error";
-  } | null>(null);
 
   useEffect(() => {
     fetchContexts();
   }, []);
-
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
 
   function fetchContexts() {
     fetch("/api/contexts")
@@ -124,15 +114,15 @@ export default function ContextsPage() {
         }),
       });
       if (res.ok) {
-        setMessage({ text: `${meta.name} saved`, type: "success" });
+        toast.success("Context saved");
         setEditingType(null);
         setEditContent("");
         fetchContexts();
       } else {
-        setMessage({ text: "Failed to save", type: "error" });
+        toast.error("Failed to save context");
       }
     } catch {
-      setMessage({ text: "Failed to save", type: "error" });
+      toast.error("Failed to save context");
     } finally {
       setSaving(false);
     }
@@ -143,17 +133,14 @@ export default function ContextsPage() {
     try {
       const res = await fetch(`/api/contexts/${type}`, { method: "DELETE" });
       if (res.ok) {
-        setMessage({
-          text: `${meta?.name ?? type} deleted`,
-          type: "success",
-        });
+        toast.success("Context removed");
         setDeleteConfirm(null);
         fetchContexts();
       } else {
-        setMessage({ text: "Failed to delete", type: "error" });
+        toast.error("Failed to save context");
       }
     } catch {
-      setMessage({ text: "Failed to delete", type: "error" });
+      toast.error("Failed to save context");
     }
   }
 
@@ -165,18 +152,6 @@ export default function ContextsPage() {
           Manage tone guides, briefs, legal policies, and other context
           documents used by analysis skills.
         </p>
-
-        {message && (
-          <div
-            className={`mt-4 rounded-md px-4 py-2 text-sm ${
-              message.type === "success"
-                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                : "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
 
         <div className="mt-6 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {loading

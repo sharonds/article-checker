@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 import { FooterBar } from "@/components/footer-bar";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
@@ -64,8 +65,6 @@ export default function SettingsPage() {
   >({});
   const [savingKeys, setSavingKeys] = useState(false);
   const [savingThresholds, setSavingThresholds] = useState(false);
-  const [keysSaved, setKeysSaved] = useState(false);
-  const [thresholdsSaved, setThresholdsSaved] = useState(false);
 
   useEffect(() => {
     fetch("/api/config")
@@ -100,51 +99,62 @@ export default function SettingsPage() {
 
   async function handleProviderChange(id: string) {
     setProvider(id);
-    await fetch("/api/config", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ llmProvider: id }),
-    });
+    try {
+      await fetch("/api/config", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ llmProvider: id }),
+      });
+      toast.success("LLM provider updated");
+    } catch {
+      toast.error("Failed to save");
+    }
   }
 
   async function handleSaveKeys() {
     setSavingKeys(true);
-    setKeysSaved(false);
-    const updates: Record<string, string> = {};
-    for (const [key, val] of Object.entries(keyValues)) {
-      if (val.trim()) updates[key] = val.trim();
+    try {
+      const updates: Record<string, string> = {};
+      for (const [key, val] of Object.entries(keyValues)) {
+        if (val.trim()) updates[key] = val.trim();
+      }
+      if (Object.keys(updates).length > 0) {
+        await fetch("/api/config", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        });
+      }
+      // Refresh status
+      const data = await fetch("/api/config").then((r) => r.json());
+      setApiKeys(data.apiKeys ?? {});
+      setConfig(data.config ?? {});
+      // Clear inputs after save
+      const kv: Record<string, string> = {};
+      for (const f of KEY_FIELDS) kv[f.configKey] = "";
+      setKeyValues(kv);
+      toast.success("API keys saved");
+    } catch {
+      toast.error("Failed to save");
+    } finally {
+      setSavingKeys(false);
     }
-    if (Object.keys(updates).length > 0) {
-      await fetch("/api/config", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      });
-    }
-    // Refresh status
-    const data = await fetch("/api/config").then((r) => r.json());
-    setApiKeys(data.apiKeys ?? {});
-    setConfig(data.config ?? {});
-    // Clear inputs after save
-    const kv: Record<string, string> = {};
-    for (const f of KEY_FIELDS) kv[f.configKey] = "";
-    setKeyValues(kv);
-    setSavingKeys(false);
-    setKeysSaved(true);
-    setTimeout(() => setKeysSaved(false), 3000);
   }
 
   async function handleSaveThresholds() {
     setSavingThresholds(true);
-    setThresholdsSaved(false);
-    await fetch("/api/config", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ thresholds }),
-    });
-    setSavingThresholds(false);
-    setThresholdsSaved(true);
-    setTimeout(() => setThresholdsSaved(false), 3000);
+    try {
+      await fetch("/api/config", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thresholds }),
+      });
+      toast.success("Thresholds saved");
+    } catch {
+      toast.error("Failed to save");
+    } finally {
+      setSavingThresholds(false);
+    }
   }
 
   function getMaskedValue(configKey: string): string {
@@ -266,11 +276,6 @@ export default function SettingsPage() {
                   </>
                 )}
               </Button>
-              {keysSaved && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                  Keys saved successfully.
-                </p>
-              )}
             </CardContent>
           </Card>
 
@@ -365,11 +370,6 @@ export default function SettingsPage() {
                   </>
                 )}
               </Button>
-              {thresholdsSaved && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                  Thresholds saved successfully.
-                </p>
-              )}
             </CardContent>
           </Card>
         </div>

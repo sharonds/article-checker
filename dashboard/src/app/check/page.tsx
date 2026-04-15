@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Loader2, Upload, FileText, Link2, AlertCircle } from "lucide-react";
 import { FooterBar } from "@/components/footer-bar";
 import { SkillCard, type SkillResult } from "@/components/skill-card";
@@ -85,14 +86,23 @@ export default function CheckPage() {
       if (checksRes.ok) {
         const checks = await checksRes.json();
         if (Array.isArray(checks) && checks.length > 0) {
+          const checkData = checks[0];
           setResult({
-            id: checks[0].id,
-            results: checks[0].results ?? [],
+            id: checkData.id,
+            results: checkData.results ?? [],
           });
+          const overallScore = checkData.overallScore ?? checkData.score;
+          if (overallScore != null) {
+            toast.success(`Check complete — score ${overallScore}/100`);
+          } else {
+            toast.success("Check complete");
+          }
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred.");
+      const errorMessage = err instanceof Error ? err.message : "An error occurred.";
+      setError(errorMessage);
+      toast.error("Check failed: " + errorMessage);
     } finally {
       setLoading(false);
     }

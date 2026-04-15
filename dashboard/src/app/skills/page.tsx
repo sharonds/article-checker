@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FooterBar } from "@/components/footer-bar";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,8 @@ export default function SkillsPage() {
   }, []);
 
   async function toggleSkill(skillId: string, enabled: boolean) {
+    const skill = skills.find((s) => s.id === skillId);
+    const skillName = skill?.name ?? skillId;
     // Optimistic update
     setSkills((prev) =>
       prev.map((s) => (s.id === skillId ? { ...s, enabled } : s))
@@ -51,11 +54,15 @@ export default function SkillsPage() {
         setSkills((prev) =>
           prev.map((s) => (s.id === skillId ? { ...s, enabled: !enabled } : s))
         );
+        toast.error("Failed to update skill");
+      } else {
+        toast.success(`${skillName} ${enabled ? "enabled" : "disabled"}`);
       }
     } catch {
       setSkills((prev) =>
         prev.map((s) => (s.id === skillId ? { ...s, enabled: !enabled } : s))
       );
+      toast.error("Failed to update skill");
     }
   }
 

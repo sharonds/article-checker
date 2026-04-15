@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
 import { Sidebar } from "@/components/sidebar";
 import "./globals.css";
@@ -36,6 +37,7 @@ export default function RootLayout({
           <main className="ml-60 flex min-h-screen flex-1 flex-col">
             {children}
           </main>
+          <Toaster position="bottom-right" theme="system" richColors />
         </Providers>
       </body>
     </html>
