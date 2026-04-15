@@ -8,6 +8,7 @@ import { runBatch } from "./batch.ts";
 const args = process.argv.slice(2);
 const forceSetup = args.includes("--setup");
 const showHistory = args.includes("--history");
+const showUi = args.includes("--ui");
 const batchIndex = args.indexOf("--batch");
 const batchDir = batchIndex !== -1 ? args[batchIndex + 1] : undefined;
 const outputIndex = args.indexOf("--output");
@@ -15,6 +16,34 @@ const outputPath = outputIndex !== -1 ? args[outputIndex + 1] : undefined;
 const docUrl = args.find((a) => !a.startsWith("--") && a !== batchDir && a !== outputPath);
 
 async function main() {
+  // --ui: start the dashboard dev server and open browser
+  if (showUi) {
+    const { spawn } = await import("child_process");
+    const openModule = await import("open");
+    const openBrowser = openModule.default;
+    const { join } = await import("path");
+
+    const dashDir = join(import.meta.dir, "..", "dashboard");
+    console.log("Starting Article Checker dashboard...");
+    console.log("Opening http://localhost:3000\n");
+
+    const child = spawn("bun", ["run", "dev"], {
+      cwd: dashDir,
+      stdio: "inherit",
+      env: { ...process.env },
+    });
+
+    // Wait a bit for the server to start, then open browser
+    setTimeout(() => openBrowser("http://localhost:3000"), 3000);
+
+    // Keep alive until user presses Ctrl+C
+    child.on("exit", (code) => process.exit(code ?? 0));
+    process.on("SIGINT", () => { child.kill(); process.exit(0); });
+
+    // Block forever
+    await new Promise(() => {});
+  }
+
   // --history: show recent checks from SQLite
   if (showHistory) {
     const db = openDb();
@@ -64,6 +93,7 @@ async function main() {
     console.log('  article-checker ./my-article.md');
     console.log("");
     console.log("Options:");
+    console.log("  --ui              Open the local web dashboard");
     console.log("  --batch <dir>     Check all .md/.txt files in a directory");
     console.log("  --output <path>   Export report to .md or .html file");
     console.log("  --setup           Re-run the credential setup wizard");
