@@ -12,7 +12,7 @@ test("buildTonePrompt requests JSON output", () => {
   expect(prompt.toLowerCase()).toContain("json");
 });
 
-test("uses context from config.contexts when available", () => {
+test("buildTonePrompt includes custom guide text in output", () => {
   const prompt = buildTonePrompt("test article", "Be warm and friendly");
   expect(prompt).toContain("Be warm and friendly");
 });

@@ -14,16 +14,16 @@ export async function POST(request: Request) {
   try {
     const { type, name, content } = (await request.json()) as {
       type: string;
-      name: string;
+      name?: string;
       content: string;
     };
-    if (!type || !name) {
+    if (!type) {
       return jsonWithCors(
-        { error: "type and name are required" },
+        { error: "type is required" },
         { status: 400 }
       );
     }
-    upsertContext(type, name, content ?? "");
+    upsertContext(type, name ?? type, content ?? "");
     return jsonWithCors({ ok: true });
   } catch {
     return jsonWithCors({ error: "Failed to save context" }, { status: 500 });

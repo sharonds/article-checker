@@ -2,7 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { runCheckHeadless } from "./checker.ts";
-import { openDb, queryRecent, getContext, listContexts, insertContext, updateContext } from "./db.ts";
+import { openDb, queryRecent, getCheckById, getContext, listContexts, insertContext, updateContext } from "./db.ts";
 import { readConfig, writeConfig } from "./config.ts";
 
 export function getToolDefinitions() {
@@ -80,8 +80,6 @@ export function getToolDefinitions() {
 }
 
 async function handleToolCall(name: string, args: Record<string, unknown>) {
-  const db = openDb();
-
   switch (name) {
     case "check_article": {
       const text = args.text as string;
@@ -90,32 +88,51 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     }
     case "list_reports": {
-      const limit = (args.limit as number) ?? 20;
-      const checks = queryRecent(db, limit);
-      return { content: [{ type: "text", text: JSON.stringify(checks, null, 2) }] };
+      const db = openDb();
+      try {
+        const limit = (args.limit as number) ?? 20;
+        const checks = queryRecent(db, limit);
+        return { content: [{ type: "text", text: JSON.stringify(checks, null, 2) }] };
+      } finally {
+        db.close();
+      }
     }
     case "get_report": {
-      const id = args.id as number;
-      const checks = queryRecent(db, 100);
-      const check = checks.find(c => c.id === id);
-      if (!check) return { content: [{ type: "text", text: `Report ${id} not found` }], isError: true };
-      return { content: [{ type: "text", text: JSON.stringify(check, null, 2) }] };
+      const db = openDb();
+      try {
+        const id = args.id as number;
+        const check = getCheckById(db, id);
+        if (!check) return { content: [{ type: "text", text: `Report ${id} not found` }], isError: true };
+        return { content: [{ type: "text", text: JSON.stringify(check, null, 2) }] };
+      } finally {
+        db.close();
+      }
     }
     case "upload_context": {
-      const type = args.type as string;
-      const ctxName = (args.name as string) ?? type;
-      const content = args.content as string;
-      const existing = getContext(db, type);
-      if (existing) {
-        updateContext(db, type, { name: ctxName, content });
-      } else {
-        insertContext(db, { type, name: ctxName, content });
+      const db = openDb();
+      try {
+        const type = args.type as string;
+        const ctxName = (args.name as string) ?? type;
+        const content = args.content as string;
+        const existing = getContext(db, type);
+        if (existing) {
+          updateContext(db, type, { name: ctxName, content });
+        } else {
+          insertContext(db, { type, name: ctxName, content });
+        }
+        return { content: [{ type: "text", text: `Context '${type}' saved (${content.length} chars)` }] };
+      } finally {
+        db.close();
       }
-      return { content: [{ type: "text", text: `Context '${type}' saved (${content.length} chars)` }] };
     }
     case "list_contexts": {
-      const contexts = listContexts(db);
-      return { content: [{ type: "text", text: JSON.stringify(contexts, null, 2) }] };
+      const db = openDb();
+      try {
+        const contexts = listContexts(db);
+        return { content: [{ type: "text", text: JSON.stringify(contexts, null, 2) }] };
+      } finally {
+        db.close();
+      }
     }
     case "get_skills": {
       const config = readConfig();

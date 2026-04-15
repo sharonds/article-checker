@@ -27,7 +27,13 @@ async function main() {
   // --ci / --json: headless check with structured output, no Ink UI
   if (args.includes("--ci") || args.includes("--json")) {
     const { runCheckHeadless } = await import("./checker.ts");
-    const source = args.find((a) => !a.startsWith("--") && a !== args[args.indexOf("--output") + 1]);
+    const flagsWithValues = ["--output", "--batch"];
+    const flagValueArgs = new Set<string>();
+    for (const flag of flagsWithValues) {
+      const idx = args.indexOf(flag);
+      if (idx !== -1 && args[idx + 1]) flagValueArgs.add(args[idx + 1]);
+    }
+    const source = args.find((a) => !a.startsWith("--") && !flagValueArgs.has(a));
     if (!source) {
       console.error("Usage: article-checker --ci <file-or-url>");
       process.exit(1);

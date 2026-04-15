@@ -23,8 +23,8 @@ interface ContextItem {
   type: string;
   name: string;
   content: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const CONTEXT_TYPES = [
@@ -241,7 +241,7 @@ export default function ContextsPage() {
                             <span>{ctx.content.length} chars</span>
                             <span>
                               Updated{" "}
-                              {new Date(ctx.updated_at).toLocaleDateString()}
+                              {new Date(ctx.updatedAt).toLocaleDateString()}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">

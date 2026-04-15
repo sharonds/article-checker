@@ -92,8 +92,8 @@ export function listContexts(db: Database): ContextRecord[] {
 export function updateContext(db: Database, type: string, updates: Partial<Pick<ContextRecord, "name" | "content">>): void {
   const sets: string[] = [];
   const vals: string[] = [];
-  if (updates.name) { sets.push("name = ?"); vals.push(updates.name); }
-  if (updates.content) { sets.push("content = ?"); vals.push(updates.content); }
+  if (updates.name !== undefined) { sets.push("name = ?"); vals.push(updates.name); }
+  if (updates.content !== undefined) { sets.push("content = ?"); vals.push(updates.content); }
   sets.push("updated_at = datetime('now')");
   vals.push(type);
   db.run(`UPDATE contexts SET ${sets.join(", ")} WHERE type = ?`, vals);
@@ -108,6 +108,21 @@ export function loadAllContexts(db: Database): Record<string, string> {
   const map: Record<string, string> = {};
   for (const r of rows) map[r.type] = r.content;
   return map;
+}
+
+export function getCheckById(db: Database, id: number): CheckRecord | null {
+  const row = db.query<{ id: number; source: string; word_count: number; results_json: string; total_cost: number; created_at: string }, [number]>(
+    "SELECT * FROM checks WHERE id = ? LIMIT 1"
+  ).get(id);
+  if (!row) return null;
+  return {
+    id: row.id,
+    source: row.source,
+    wordCount: row.word_count,
+    results: JSON.parse(row.results_json) as SkillResult[],
+    totalCostUsd: row.total_cost,
+    createdAt: row.created_at,
+  };
 }
 
 export function queryRecent(db: Database, limit: number): CheckRecord[] {

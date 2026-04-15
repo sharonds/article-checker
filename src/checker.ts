@@ -53,28 +53,31 @@ export async function runCheckHeadless(
 
   // Load contexts from DB and attach to config
   const db = openDb();
-  const contexts = loadAllContexts(db);
-  const configWithContexts: Config = { ...config, contexts };
+  try {
+    const contexts = loadAllContexts(db);
+    const configWithContexts: Config = { ...config, contexts };
 
-  // Read article text
-  const text = options?.text ?? await fetchGoogleDoc(source);
-  const wordCount = countWords(text);
+    // Read article text
+    const text = options?.text ?? await fetchGoogleDoc(source);
+    const wordCount = countWords(text);
 
-  // Build and run skills
-  const skills = buildSkills(configWithContexts);
-  const registry = new SkillRegistry(skills);
-  let results = await registry.runAll(text, configWithContexts);
+    // Build and run skills
+    const skills = buildSkills(configWithContexts);
+    const registry = new SkillRegistry(skills);
+    let results = await registry.runAll(text, configWithContexts);
 
-  // Apply thresholds
-  results = results.map((r) => ({
-    ...r,
-    verdict: applyThreshold(r.score, r.verdict, config.thresholds?.[r.skillId]),
-  }));
+    // Apply thresholds
+    results = results.map((r) => ({
+      ...r,
+      verdict: applyThreshold(r.score, r.verdict, config.thresholds?.[r.skillId]),
+    }));
 
-  // Save to DB
-  const totalCostUsd = results.reduce((sum, r) => sum + r.costUsd, 0);
-  const id = insertCheck(db, { source, wordCount, results, totalCostUsd });
-  db.close();
+    // Save to DB
+    const totalCostUsd = results.reduce((sum, r) => sum + r.costUsd, 0);
+    const id = insertCheck(db, { source, wordCount, results, totalCostUsd });
 
-  return { id, source, wordCount, results, totalCostUsd };
+    return { id, source, wordCount, results, totalCostUsd };
+  } finally {
+    db.close();
+  }
 }
