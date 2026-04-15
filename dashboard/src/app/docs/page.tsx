@@ -116,19 +116,19 @@ function SkillsReference() {
       name: "SEO Analysis",
       engine: "Offline",
       cost: "Free",
-      desc: "Runs locally without any API calls. Checks word count, heading structure (H1-H6), readability score, keyword density, internal/external link counts, and list usage.",
+      desc: "Runs locally without any API calls. Checks word count, heading structure (H1-H6), readability score, keyword density, internal/external link counts, and list usage. Auto-detects article language and uses language-specific stop words for keyword extraction.",
     },
     {
       name: "Fact Check",
       engine: "Exa AI + MiniMax",
       cost: "~$0.02",
-      desc: "Extracts factual claims from the article, searches for supporting or contradicting evidence via Exa AI, then uses MiniMax to assess confidence levels for each claim.",
+      desc: "Extracts factual claims from the article, searches for supporting or contradicting evidence via Exa AI, then uses MiniMax to assess confidence levels for each claim. Includes citation links for verified claims.",
     },
     {
       name: "Tone of Voice",
       engine: "MiniMax",
       cost: "~$0.01",
-      desc: "Evaluates whether the article matches your brand voice guidelines. Automatically loads a tone-guide context if one has been uploaded via the Contexts page or CLI.",
+      desc: "Evaluates whether the article matches your brand voice guidelines. Returns rewrite suggestions in your brand voice for each violation. Automatically loads a tone-guide context if one has been uploaded via the Contexts page or CLI.",
     },
     {
       name: "Legal Risk",
@@ -281,6 +281,20 @@ function ApiKeysSetup() {
         <li>Sign up at console.anthropic.com</li>
         <li>Generate an API key</li>
         <li>Enter in Settings or set ANTHROPIC_API_KEY</li>
+      </ol>
+
+      <SubHeading>OpenRouter</SubHeading>
+      <Prose>
+        <p>
+          One API key for 200+ models (GPT-4o, Llama, Mistral, and more).
+          Set LLM_PROVIDER=openrouter to use it.
+        </p>
+      </Prose>
+      <ol className="mt-1 space-y-1 text-sm text-muted-foreground list-decimal pl-5">
+        <li>Sign up at openrouter.ai/settings/keys</li>
+        <li>Create an API key</li>
+        <li>Enter in Settings or set OPENROUTER_API_KEY</li>
+        <li>Set LLM_PROVIDER=openrouter in your environment</li>
       </ol>
     </div>
   );

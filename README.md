@@ -43,8 +43,8 @@ All enabled skills run in parallel. Adding more skills does not increase total t
 | **Plagiarism check** | Checks against the full indexed web via Copyscape. Returns 0–100% similarity + matched sources. |
 | **AI detection** | Copyscape AI detector. Returns 0–100% probability per sentence and an overall verdict. |
 | **SEO analysis** | Offline. Checks word count (800–2500 ideal), H1/H2 headings, average sentence length, Flesch-Kincaid readability. |
-| **Fact check** | Extracts 4 specific claims → searches each with Exa AI → Claude assesses evidence → per-claim supported/unsupported verdict. |
-| **Tone of voice** | Loads your brand voice guide (`.md` file), sends article + guide to Claude, returns violations with quotes. |
+| **Fact check** | Extracts 4 specific claims → searches each with Exa AI → Claude assesses evidence → per-claim supported/unsupported verdict with citation recommendations. |
+| **Tone of voice** | Loads your brand voice guide (`.md` file), sends article + guide to Claude, returns violations with quotes and rewrite suggestions in your brand voice. |
 | **Legal risk** | Scans for unsubstantiated health claims, defamation, false promises, GDPR risks, price misrepresentation. Findings include actionable "Fix:" suggestions. |
 | **Content summary** | Analyzes topic, main argument, target audience, and tone (informational/persuasive/conversational/technical/promotional). |
 | **SEO keyword detection** | Extracts the top keyword and checks whether it appears in the first paragraph. |
@@ -204,6 +204,8 @@ PARALLEL_API_KEY=your-parallel-api-key
 EXA_API_KEY=your-exa-api-key
 MINIMAX_API_KEY=your-minimax-api-key  # preferred — cheaper, Anthropic-compatible
 ANTHROPIC_API_KEY=your-anthropic-api-key  # fallback if MINIMAX_API_KEY not set
+OPENROUTER_API_KEY=your-openrouter-key  # alternative — one key for 200+ models
+LLM_PROVIDER=minimax  # minimax (default), anthropic, or openrouter
 
 # Optional — tone of voice skill (path to your brand voice .md file)
 TONE_GUIDE_FILE=/path/to/brand-voice.md
@@ -289,6 +291,17 @@ Used automatically if `MINIMAX_API_KEY` is not set.
 3. Add to `.env`: `ANTHROPIC_API_KEY=your-key`
 
 **Cost per check:** ~$0.001–0.002 (Haiku pricing).
+
+### OpenRouter (optional — one key for 200+ models)
+
+OpenRouter lets you use any LLM (GPT-4o, Llama, Mistral, etc.) with a single API key.
+
+1. Go to [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
+2. Create an API key
+3. Add to `.env`: `OPENROUTER_API_KEY=your-key`
+4. Optionally set preferred provider: `LLM_PROVIDER=openrouter`
+
+**Cost:** Varies by model. See [openrouter.ai/models](https://openrouter.ai/models) for per-model pricing.
 
 ### Parallel AI (optional — passage evidence)
 
@@ -479,6 +492,10 @@ Override the default pass/warn/fail cutoffs for any skill in `~/.article-checker
 
 Scores >= `pass` result in a PASS verdict, scores >= `warn` result in WARN, and anything below `warn` is FAIL. Only skills listed in `thresholds` are overridden; all others use their built-in defaults.
 
+### Multi-Language Support
+
+Article Checker auto-detects article language (English, Hebrew, Arabic, Chinese, Japanese, Korean). SEO keyword extraction uses language-specific stop words for Hebrew and English (more languages planned). The detected language appears in the SEO summary.
+
 ### Tone of Voice Guide
 
 The tone skill compares your article against a brand voice document — a `.md` file that describes how your brand writes. Example:
@@ -514,12 +531,14 @@ Set the path: `TONE_GUIDE_FILE=/path/to/brand-voice.md`
 - Headless check engine (`runCheckHeadless()`) for MCP, CI, and dashboard API
 - AGENTS.md — full agent integration guide
 - Dashboard Contexts page — upload, edit, preview contexts in browser
+- OpenRouter integration — one API key for 200+ models, configurable via `LLM_PROVIDER` env var
+- Multi-language support — auto-detects English, Hebrew, Arabic, Chinese, Japanese, Korean with language-specific SEO
+- Tone improvement suggestions — rewrite suggestions in brand voice alongside violation flags
+- Citation recommendations — verified fact-check claims include source domain citations
 
 ### Medium-term
 
-- **Tone improvement suggestions** — not just flag violations, but suggest a rewritten version of each flagged sentence in your brand voice
 - **Private index** — register your own published articles with Copyscape so future checks exclude them from results
-- **Citation recommendations** — when facts are verified by Exa, suggest adding inline citations with source links
 
 ### Long-term
 
@@ -528,7 +547,7 @@ Set the path: `TONE_GUIDE_FILE=/path/to/brand-voice.md`
 - **Team dashboard** — multi-user web interface with per-writer stats and trends
 - **Custom skill packages** — publish your own validator as an npm package, install with `article-checker skill add <package>`
 - **Ranking score** — overall article quality score combining all skill signals, calibrated for SEO impact
-- **Additional LLM providers** — OpenRouter (any model via one key), OpenAI (GPT-4o-mini), Google Gemini — configurable per user
+- **Additional LLM providers** — OpenAI (GPT-4o-mini), Google Gemini — configurable per user
 
 ---
 
@@ -580,7 +599,7 @@ article-checker/
 │       ├── legal.ts          # LegalSkill — Claude legal risk scanner
 │       ├── summary.ts        # SummarySkill — topic, argument, audience, tone analysis
 │       ├── brief.ts          # BriefSkill — checks article against content brief
-│       └── llm.ts            # Shared LLM client factory for MiniMax/Claude
+│       └── llm.ts            # Shared LLM client factory for MiniMax/Claude/OpenRouter
 ├── dashboard/                # Local web dashboard (Next.js)
 │   ├── src/app/              # Pages: overview, reports, check, skills, settings, docs
 │   ├── src/app/api/          # JSON API routes
@@ -673,6 +692,8 @@ PARALLEL_API_KEY=your-parallel-key     # optional
 EXA_API_KEY=your-exa-key               # optional — enables fact check
 MINIMAX_API_KEY=your-minimax-key       # optional — preferred LLM for fact check, tone, legal
 ANTHROPIC_API_KEY=your-anthropic-key   # optional — fallback LLM if MINIMAX_API_KEY not set
+OPENROUTER_API_KEY=your-openrouter-key # optional — one key for 200+ models
+LLM_PROVIDER=minimax                   # optional — minimax (default), anthropic, or openrouter
 TONE_GUIDE_FILE=/path/to/voice.md      # optional — enables tone of voice skill
 ```
 

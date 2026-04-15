@@ -21,6 +21,8 @@ export interface Config {
   exaApiKey?: string;
   anthropicApiKey?: string;
   minimaxApiKey?: string;
+  openrouterApiKey?: string;
+  llmProvider?: "minimax" | "anthropic" | "openrouter";
   toneGuideFile?: string;
   skills: SkillsConfig;
   thresholds?: Record<string, Threshold>;
@@ -57,6 +59,12 @@ export function readConfig(): Config {
     exaApiKey: process.env.EXA_API_KEY ?? file.exaApiKey,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? file.anthropicApiKey,
     minimaxApiKey: process.env.MINIMAX_API_KEY ?? file.minimaxApiKey,
+    openrouterApiKey: process.env.OPENROUTER_API_KEY ?? file.openrouterApiKey,
+    llmProvider: (() => {
+      const validProviders = ["minimax", "anthropic", "openrouter"];
+      const rawProvider = process.env.LLM_PROVIDER ?? file.llmProvider;
+      return validProviders.includes(rawProvider as string) ? (rawProvider as Config["llmProvider"]) : undefined;
+    })(),
     toneGuideFile: process.env.TONE_GUIDE_FILE ?? file.toneGuideFile,
     skills: { ...DEFAULT_SKILLS, ...(file.skills ?? {}) },
     thresholds: file.thresholds,

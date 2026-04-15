@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "fs";
 import type { Skill, SkillResult, Finding } from "./types.ts";
 import type { Config } from "../config.ts";
-import { getLlmClient, getTextBlock, parseJsonResponse } from "./llm.ts";
+import { getLlmClient, parseJsonResponse } from "./llm.ts";
 
 export function buildTonePrompt(articleText: string, toneGuide: string): string {
   return `You are a brand voice editor. Assess how well the article matches the tone guide below.
@@ -18,7 +18,7 @@ Reply with ONLY this JSON structure, no other text:
   "verdict": <"pass" if score>=75, "warn" if 50-74, "fail" if <50>,
   "summary": "<one sentence overall assessment>",
   "violations": [
-    { "quote": "<sentence from article>", "issue": "<what tone rule it breaks>" }
+    { "quote": "<sentence from article>", "issue": "<what tone rule it breaks>", "suggestion": "<rewritten version of the sentence in the correct tone>" }
   ]
 }`;
 }
@@ -51,15 +51,9 @@ export class ToneSkill implements Skill {
       };
     }
 
-    const response = await llm.client.messages.create({
-      model: llm.model,
-      max_tokens: 1024,
-      messages: [{ role: "user", content: buildTonePrompt(text, toneGuide) }],
-    });
+    const raw = await llm.call(buildTonePrompt(text, toneGuide), 1024);
 
-    const raw = getTextBlock(response.content);
-
-    let parsed: { score: number; verdict: string; summary: string; violations: Array<{ quote: string; issue: string }> };
+    let parsed: { score: number; verdict: string; summary: string; violations: Array<{ quote: string; issue: string; suggestion?: string }> };
     try {
       parsed = parseJsonResponse(raw);
     } catch {
@@ -72,7 +66,7 @@ export class ToneSkill implements Skill {
 
     const findings: Finding[] = (parsed.violations ?? []).map((v) => ({
       severity: "warn" as const,
-      text: v.issue,
+      text: `${v.issue}${v.suggestion ? ` — Rewrite: "${v.suggestion}"` : ""}`,
       quote: v.quote,
     }));
 

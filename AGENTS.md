@@ -79,6 +79,20 @@ Or add to your MCP config (e.g., `.claude/settings.json`):
 | `style-guide` | SEO + Tone | Writing style rules |
 | `custom` | Custom skills | Any additional context |
 
+## Environment Variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `COPYSCAPE_USER` | Yes | Copyscape username |
+| `COPYSCAPE_KEY` | Yes | Copyscape API key |
+| `EXA_API_KEY` | No | Exa AI for fact-check evidence search |
+| `MINIMAX_API_KEY` | No | MiniMax LLM (preferred, cheapest) |
+| `ANTHROPIC_API_KEY` | No | Anthropic Claude LLM (fallback) |
+| `OPENROUTER_API_KEY` | No | OpenRouter — one key for 200+ models |
+| `LLM_PROVIDER` | No | `minimax` (default), `anthropic`, or `openrouter` |
+| `PARALLEL_API_KEY` | No | Parallel AI for passage evidence |
+| `TONE_GUIDE_FILE` | No | Path to brand voice `.md` file |
+
 ## Data Storage
 
 All data is local:

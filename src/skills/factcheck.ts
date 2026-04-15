@@ -1,7 +1,7 @@
 import Exa from "exa-js";
 import type { Skill, SkillResult, Finding } from "./types.ts";
 import type { Config } from "../config.ts";
-import { getLlmClient, getTextBlock, parseJsonResponse } from "./llm.ts";
+import { getLlmClient, parseJsonResponse } from "./llm.ts";
 
 export function extractClaimsPrompt(articleText: string): string {
   return `Extract the 4 most specific, verifiable factual claims from the article below.
@@ -15,6 +15,15 @@ Example output:
 ["More than one billion people are vitamin D deficient worldwide.", "Vitamin D deficiency causes rickets in children."]
 
 JSON array of claims:`;
+}
+
+export function formatCitation(url: string): string {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace("www.", "");
+  } catch {
+    return url;
+  }
 }
 
 export function claimConfidence(sourceCount: number, supported: boolean | null): "high" | "medium" | "low" {
@@ -52,12 +61,7 @@ export class FactCheckSkill implements Skill {
     const exa = new Exa(config.exaApiKey);
 
     // Step 1: extract claims
-    const claimsResponse = await llm.client.messages.create({
-      model: llm.model,
-      max_tokens: 1024,
-      messages: [{ role: "user", content: extractClaimsPrompt(text) }],
-    });
-    const claimsText = getTextBlock(claimsResponse.content);
+    const claimsText = await llm.call(extractClaimsPrompt(text), 1024);
 
     let claims: string[] = [];
     try {
@@ -111,15 +115,11 @@ ${evidence}
 Reply with JSON: { "supported": true/false/null, "note": "one sentence explanation" }
 null means inconclusive.`;
 
-      const res = await llm.client.messages.create({
-        model: llm.model,
-        max_tokens: 512,
-        messages: [{ role: "user", content: assessPrompt }],
-      });
+      const assessRaw = await llm.call(assessPrompt, 512);
       costUsd += 0.001;
 
       try {
-        const json = parseJsonResponse<{ supported: boolean | null; note: string }>(getTextBlock(res.content));
+        const json = parseJsonResponse<{ supported: boolean | null; note: string }>(assessRaw);
         assessments.push({ claim, supported: json.supported, note: json.note });
       } catch {
         assessments.push({ claim, supported: null, note: "Could not assess" });
@@ -136,7 +136,12 @@ null means inconclusive.`;
       } else if (supported === null) {
         findings.push({ severity: "warn", text: `Unverified (${confidence} confidence): "${claim}" — ${note}` });
       } else {
-        findings.push({ severity: "info", text: `Verified (${confidence} confidence): "${claim}" — ${note}` });
+        const sources = claimResults.find(cr => cr.claim === claim)?.results ?? [];
+        const citations = sources.slice(0, 2).map(r => `${formatCitation(r.url)}`).join(", ");
+        findings.push({
+          severity: "info",
+          text: `Verified (${confidence} confidence): "${claim}" — ${note}${citations ? `. Cite: ${citations}` : ""}`,
+        });
       }
     }
 

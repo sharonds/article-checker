@@ -1,5 +1,5 @@
 import { test, expect, describe } from "bun:test";
-import { extractClaimsPrompt, claimConfidence } from "./factcheck.ts";
+import { extractClaimsPrompt, claimConfidence, formatCitation } from "./factcheck.ts";
 
 describe("extractClaimsPrompt", () => {
   test("returns a string containing the article text", () => {
@@ -30,5 +30,18 @@ describe("claimConfidence", () => {
   });
   test("returns low for 0 sources", () => {
     expect(claimConfidence(0, true)).toBe("low");
+  });
+});
+
+describe("formatCitation", () => {
+  test("formats URL as plain text domain", () => {
+    const cite = formatCitation("https://www.cdc.gov/diabetes/basics/facts.html");
+    expect(cite).toBe("cdc.gov");
+  });
+  test("strips www prefix", () => {
+    expect(formatCitation("https://www.example.com/page")).toBe("example.com");
+  });
+  test("returns raw URL on parse failure", () => {
+    expect(formatCitation("not-a-url")).toBe("not-a-url");
   });
 });

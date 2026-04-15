@@ -40,10 +40,10 @@ const SKILL_INFO: Record<string, { description: string; context?: string }> = {
   },
   factCheck: {
     description:
-      "Extracts claims, searches evidence via Exa AI, assesses with confidence levels.",
+      "Extracts claims, searches evidence via Exa AI, assesses with confidence levels. Includes citation links for verified claims.",
   },
   tone: {
-    description: "Compares article against your brand voice guide.",
+    description: "Compares article against your brand voice guide. Returns rewrite suggestions in your brand voice.",
     context: "tone-guide",
   },
   legal: {
