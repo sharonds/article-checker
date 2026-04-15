@@ -294,12 +294,9 @@ export default function ContextsPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                openSheet(meta.type);
-                                // Defer to allow sheet to mount
-                                setTimeout(() => startSheetEdit(), 50);
                                 setSheetType(meta.type);
-                                setSheetEditing(true);
                                 setSheetEditContent(ctx.content);
+                                setSheetEditing(true);
                               }}
                             >
                               <Pencil className="mr-1 h-3 w-3" />

@@ -17,7 +17,9 @@ export interface CheckRecord {
 }
 
 export function openDb(path = DB_PATH): Database {
-  mkdirSync(DB_DIR, { recursive: true });
+  if (path !== ":memory:") {
+    mkdirSync(DB_DIR, { recursive: true });
+  }
   const db = new Database(path);
   createSchema(db);
   return db;

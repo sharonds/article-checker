@@ -100,11 +100,15 @@ export default function SettingsPage() {
   async function handleProviderChange(id: string) {
     setProvider(id);
     try {
-      await fetch("/api/config", {
+      const res = await fetch("/api/config", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ llmProvider: id }),
       });
+      if (!res.ok) {
+        toast.error("Failed to save");
+        return;
+      }
       toast.success("LLM provider updated");
     } catch {
       toast.error("Failed to save");
@@ -119,14 +123,23 @@ export default function SettingsPage() {
         if (val.trim()) updates[key] = val.trim();
       }
       if (Object.keys(updates).length > 0) {
-        await fetch("/api/config", {
+        const res = await fetch("/api/config", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updates),
         });
+        if (!res.ok) {
+          toast.error("Failed to save");
+          return;
+        }
       }
       // Refresh status
-      const data = await fetch("/api/config").then((r) => r.json());
+      const refetchRes = await fetch("/api/config");
+      if (!refetchRes.ok) {
+        toast.error("Failed to refresh status");
+        return;
+      }
+      const data = await refetchRes.json();
       setApiKeys(data.apiKeys ?? {});
       setConfig(data.config ?? {});
       // Clear inputs after save
@@ -144,11 +157,15 @@ export default function SettingsPage() {
   async function handleSaveThresholds() {
     setSavingThresholds(true);
     try {
-      await fetch("/api/config", {
+      const res = await fetch("/api/config", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ thresholds }),
       });
+      if (!res.ok) {
+        toast.error("Failed to save");
+        return;
+      }
       toast.success("Thresholds saved");
     } catch {
       toast.error("Failed to save");
