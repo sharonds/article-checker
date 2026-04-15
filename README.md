@@ -392,6 +392,12 @@ The dashboard also exposes a JSON API for programmatic access. See [docs/api.md]
 
 ---
 
+## Agent Integration
+
+Article Checker works with AI agents via MCP tools or CLI. See [AGENTS.md](AGENTS.md) for the full integration guide.
+
+---
+
 ## Pricing Summary
 
 Approximate cost per 800-word article check with all skills enabled:
