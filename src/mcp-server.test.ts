@@ -16,8 +16,8 @@ describe("MCP tool definitions", () => {
     const tools = getToolDefinitions();
     expect(tools.find(t => t.name === "list_reports")).toBeDefined();
   });
-  it("has 7 tools", () => {
-    expect(getToolDefinitions()).toHaveLength(7);
+  it("has 8 tools", () => {
+    expect(getToolDefinitions()).toHaveLength(8);
   });
   it("all tools have name and description", () => {
     for (const tool of getToolDefinitions()) {

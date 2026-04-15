@@ -148,6 +148,12 @@ function SkillsReference() {
       cost: "~$0.01",
       desc: "Checks the article against an uploaded content brief. Verifies coverage of required topics, audience alignment, and tone match. Requires a brief context uploaded via Contexts page or CLI.",
     },
+    {
+      name: "Content Purpose",
+      engine: "MiniMax",
+      cost: "~$0.01",
+      desc: "Detects the article's content purpose (tutorial, product announcement, case study, thought leadership, etc.) and provides purpose-specific recommendations for missing elements. Adjusts scoring expectations based on detected purpose.",
+    },
   ];
 
   return (
@@ -366,13 +372,23 @@ function CliReference() {
         </p>
       </Prose>
 
+      <SubHeading>Fix issues with AI</SubHeading>
+      <CodeBlock>{`bun run article-checker --fix ./article.md`}</CodeBlock>
+      <Prose>
+        <p>
+          Run all checks then generate AI-suggested rewrites for every flagged
+          sentence. Uses tone guide and legal policy contexts when available.
+          Outputs a before/after diff for each issue.
+        </p>
+      </Prose>
+
       <SubHeading>MCP server</SubHeading>
       <CodeBlock>{`bun run article-checker --mcp`}</CodeBlock>
       <Prose>
         <p>
           Start the MCP server for AI agent integration with Claude Code, Cursor,
-          or Windsurf. Exposes 7 tools: check_article, list_reports, get_report,
-          upload_context, list_contexts, get_skills, toggle_skill.
+          or Windsurf. Exposes 8 tools: check_article, list_reports, get_report,
+          upload_context, list_contexts, get_skills, toggle_skill, regenerate_article.
         </p>
       </Prose>
 
