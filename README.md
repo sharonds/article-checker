@@ -1,6 +1,6 @@
 # Article Checker
 
-> AI content quality gate for marketing teams. One command returns plagiarism, AI-detection, SEO score, fact-check, tone-of-voice, legal risk, and content summary — before you publish. Supports batch checking of entire directories. Results saved to a local database and rendered as a self-contained HTML report.
+> AI content quality gate for marketing teams. CLI + web dashboard that returns plagiarism, AI-detection, SEO score, fact-check, tone-of-voice, legal risk, and content summary — before you publish. Supports batch checking, tags, search, report export, and a local web dashboard for browsing results and managing skills.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Built with Bun](https://img.shields.io/badge/Built%20with-Bun-fbf0df?logo=bun)](https://bun.sh)
@@ -55,6 +55,11 @@ All enabled skills run in parallel. Adding more skills does not increase total t
 | **Google Doc support** | Paste a publicly-shared Google Doc URL. No Google auth required. |
 | **Local file support** | Pass a `.md` or `.txt` file path. Works offline for the fetch step. |
 | **Single binary** | No Node.js, Bun, or runtime required. |
+| **Web dashboard** | Local Next.js UI — overview stats, report browser, run checks, manage skills and settings, in-app docs. Start with `article-checker --ui`. |
+| **`--ui` flag** | Launches the dashboard dev server and opens `http://localhost:3000` in your browser. |
+| **`--output` export** | `--output report.md` or `--output report.html` — save the report to a file. |
+| **Tags + search** | Attach tags to checks, search across all history by text or tag via dashboard or API. |
+| **JSON API** | RESTful API at `localhost:3000/api` for running checks, managing tags, toggling skills. See [docs/api.md](docs/api.md). |
 | **Cross-platform** | Mac (Apple Silicon + Intel), Linux, Windows. |
 
 ---
@@ -303,6 +308,12 @@ article-checker ./my-article.md
 # Check all articles in a directory
 article-checker --batch ./articles/
 
+# Export report to a file
+article-checker ./my-article.md --output report.md
+
+# Open the web dashboard
+article-checker --ui
+
 # Re-run setup wizard
 article-checker --setup
 
@@ -349,6 +360,35 @@ Article input (Google Doc URL or local .md/.txt)
   │  (Ink UI)    │ │  .db     │ │  opens in browser│
   └──────────────┘ └──────────┘ └──────────────────┘
 ```
+
+---
+
+## Web Dashboard
+
+Article Checker includes a local web dashboard for browsing check history, running new checks, and managing skills and settings from the browser.
+
+**Start the dashboard:**
+
+```bash
+# Via CLI flag
+article-checker --ui
+
+# Or directly from source
+cd dashboard && bun run dev
+```
+
+The dashboard runs at `http://localhost:3000` and includes:
+
+| Page | Description |
+|------|-------------|
+| **Overview** | Total checks, average scores, cost chart, verdict distribution |
+| **Reports** | Browse and search check history, view full report details |
+| **Run Check** | Paste text or URL, attach tags, run a check from the browser |
+| **Skills** | Toggle skills on/off, view engine labels and API key status |
+| **Settings** | Manage API keys, configure thresholds per skill |
+| **Docs** | In-app onboarding, skill reference, score explanations |
+
+The dashboard also exposes a JSON API for programmatic access. See [docs/api.md](docs/api.md) for the full reference.
 
 ---
 
@@ -427,14 +467,16 @@ Set the path: `TONE_GUIDE_FILE=/path/to/brand-voice.md`
 
 ## Roadmap
 
-### Near-term
+### Done
 
-- **Readability score** — Flesch-Kincaid score displayed per article in history
-- **`--output report.md`** — save the terminal report as a Markdown file
+- Readability score (Flesch-Kincaid)
+- `--output report.md` / `--output report.html` export
+- Local web dashboard (`article-checker --ui`) with overview, reports, check, skills, settings, docs pages
+- Tags, search, and JSON API
+- Dark mode
 
 ### Medium-term
 
-- **Local web dashboard** (`article-checker ui`) — browse check history, filter by verdict, compare scores over time, manage API keys and skill toggles from a browser UI
 - **Tone improvement suggestions** — not just flag violations, but suggest a rewritten version of each flagged sentence in your brand voice
 - **Private index** — register your own published articles with Copyscape so future checks exclude them from results
 - **Citation recommendations** — when facts are verified by Exa, suggest adding inline citations with source links
@@ -473,7 +515,7 @@ Set the path: `TONE_GUIDE_FILE=/path/to/brand-voice.md`
 ```
 article-checker/
 ├── src/
-│   ├── index.tsx             # Entry point — routes to setup, history, or check
+│   ├── index.tsx             # Entry point — routes to setup, history, check, or --ui
 │   ├── setup.tsx             # First-run credential wizard (Ink UI)
 │   ├── check.tsx             # Check flow UI — SkillRegistry + HTML report + SQLite
 │   ├── gdoc.ts               # Input reader — Google Docs or local .md/.txt
@@ -497,6 +539,15 @@ article-checker/
 │       ├── legal.ts          # LegalSkill — Claude legal risk scanner
 │       ├── summary.ts        # SummarySkill — topic, argument, audience, tone analysis
 │       └── llm.ts            # Shared LLM client factory for MiniMax/Claude
+├── dashboard/                # Local web dashboard (Next.js)
+│   ├── src/app/              # Pages: overview, reports, check, skills, settings, docs
+│   ├── src/app/api/          # JSON API routes
+│   └── src/lib/              # Shared DB, config, and utility modules
+├── docs/
+│   ├── api.md                # Dashboard API reference
+│   ├── features.md           # Full feature list
+│   ├── custom-skills.md      # Custom skill authoring guide
+│   └── ROADMAP-IDEAS.md      # Roadmap and future ideas
 ├── demo/
 │   ├── english-demo.md       # English article with Wikipedia passages (33% — REWRITE)
 │   ├── hebrew-demo.md        # Hebrew article with Hebrew Wikipedia passages (39% — REWRITE)
@@ -539,6 +590,13 @@ export class MySkill implements Skill {
 Then add it to the `allSkills` array in `src/check.tsx` and wire the toggle in `src/config.ts`.
 
 See [docs/custom-skills.md](docs/custom-skills.md) for the full guide with examples.
+
+### Documentation
+
+- [API Reference](docs/api.md) — all dashboard JSON endpoints with curl examples
+- [Feature List](docs/features.md) — complete feature inventory by category
+- [Custom Skills Guide](docs/custom-skills.md) — how to write your own skill
+- [Roadmap](docs/ROADMAP-IDEAS.md) — planned features by phase
 
 ---
 

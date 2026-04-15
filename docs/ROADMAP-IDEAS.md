@@ -2,25 +2,28 @@
 
 Ideas from Sharon, collected 2026-04-15. Prioritized by user impact.
 
-## Phase 2+3 (executing now)
-- Content Summary skill (topic, audience, tone)
-- Legal suggestions ("Fix: replace with...")
-- SEO keyword detection + first-paragraph check
-- Custom skill authoring docs
-- Batch checking (`--batch ./articles/`)
-- Configurable thresholds per skill
-- Fact-check confidence levels
-- Full docs sync
+## Done (Phase 1-3)
+- ~~Content Summary skill (topic, audience, tone)~~
+- ~~Legal suggestions ("Fix: replace with...")~~
+- ~~SEO keyword detection + first-paragraph check~~
+- ~~Custom skill authoring docs~~
+- ~~Batch checking (`--batch ./articles/`)~~
+- ~~Configurable thresholds per skill~~
+- ~~Fact-check confidence levels~~
+- ~~Readability score (Flesch-Kincaid + Easy/Medium/Difficult label)~~
 
-## Phase 4 — Local Web Dashboard (`article-checker ui`)
-- Single command, localhost, no login
-- Dashboard: latest checks, pass/warn/fail counts, cost chart
-- Reports: SQLite history table, click to view full HTML report
-- Run Check: paste URL or upload file (.md, .txt, .pdf, .docx), live progress
-- Skills: toggle on/off, see API key status, engine labels
-- Settings: API keys, thresholds, tone guide path
-- Stack: Next.js 16, shadcn/ui, Drizzle ORM, SQLite, Vitest (follow Jobot patterns)
-- Deploy to Vercel (optional, local-first by default)
+## Done (Phase 4)
+- ~~Report export (`--output report.md` / `--output report.html`)~~
+- ~~Local web dashboard (`article-checker --ui`)~~
+  - ~~Dashboard: stats, cost chart, verdict distribution~~
+  - ~~Reports: browse history, view details~~
+  - ~~Run Check: paste text or URL, attach tags~~
+  - ~~Skills: toggle on/off, API key status, engine labels~~
+  - ~~Settings: API key management with status dots, thresholds~~
+  - ~~Docs: in-app onboarding, skill reference, score guide, API setup~~
+  - ~~Dark mode (next-themes)~~
+  - ~~Tags + search~~
+  - ~~JSON API (docs/api.md)~~
 
 ## Phase 5 — Smart Content Features
 - **Brief matching** — upload a brief/requirements doc, skill checks article against it (word count, topic coverage, key messages)
@@ -30,6 +33,8 @@ Ideas from Sharon, collected 2026-04-15. Prioritized by user impact.
 - **Regenerate/fix** — AI rewrites flagged sentences based on all skill feedback
 - **Model comparison** — run same article through multiple LLM providers, compare results side by side
 - **PDF/DOCX input** — parse uploaded documents, not just .md/.txt and Google Docs
+- **Tone improvement suggestions** — suggest a rewritten version of each flagged sentence in brand voice
+- **Citation recommendations** — when fact-check verifies a claim, suggest inline citations with source links
 
 ## Phase 6 — Team & Scale
 - **User-configurable skills** — user writes a skill prompt in the dashboard, saved as a custom skill
@@ -39,3 +44,4 @@ Ideas from Sharon, collected 2026-04-15. Prioritized by user impact.
 - **CI/CD hook** — `article-checker --ci` returns exit code 1 if any skill fails (for PR gates)
 - **Second AI detector** — Originality.ai cross-validation
 - **Private index** — register your published articles so Copyscape excludes them
+- **Vercel deployment** — optional cloud mode with auth

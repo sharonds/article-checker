@@ -16,6 +16,7 @@ import { openDb, insertCheck } from "./db.ts";
 import { generateReport } from "./report.ts";
 import { writeFileSync } from "fs";
 import type { SkillResult } from "./skills/types.ts";
+import { exportReport } from "./export.ts";
 
 type Phase =
   | { name: "reading" }
@@ -65,7 +66,7 @@ function Report({ results, words, reportPath, totalCostUsd }: {
   );
 }
 
-function Check({ docUrl }: { docUrl: string }) {
+function Check({ docUrl, outputPath }: { docUrl: string; outputPath?: string }) {
   const { exit } = useApp();
   const [phase, setPhase] = useState<Phase>({ name: "reading" });
 
@@ -97,13 +98,20 @@ function Check({ docUrl }: { docUrl: string }) {
         const totalCostUsd = results.reduce((s, r) => s + r.costUsd, 0);
 
         // Save to SQLite
+        const sourceLabel = process.env.ARTICLE_CHECKER_SOURCE || docUrl;
         const db = openDb();
-        insertCheck(db, { source: docUrl, wordCount: words, results, totalCostUsd });
+        insertCheck(db, { source: sourceLabel, wordCount: words, results, totalCostUsd });
         db.close();
 
         // Write HTML report
         const reportPath = "article-checker-report.html";
-        writeFileSync(reportPath, generateReport({ source: docUrl, wordCount: words, results, totalCostUsd }));
+        writeFileSync(reportPath, generateReport({ source: sourceLabel, wordCount: words, results, totalCostUsd }));
+
+        // Export to custom path if --output was specified
+        if (outputPath) {
+          exportReport({ source: sourceLabel, wordCount: words, results, totalCostUsd }, outputPath);
+          console.log(`\nReport exported to ${outputPath}`);
+        }
 
         // Open in browser (best-effort)
         import("open").then(({ default: open }) => open(reportPath)).catch(() => {});
@@ -155,7 +163,7 @@ function Check({ docUrl }: { docUrl: string }) {
   );
 }
 
-export async function runCheck(docUrl: string): Promise<void> {
-  const { waitUntilExit } = render(<Check docUrl={docUrl} />);
+export async function runCheck(docUrl: string, outputPath?: string): Promise<void> {
+  const { waitUntilExit } = render(<Check docUrl={docUrl} outputPath={outputPath} />);
   await waitUntilExit();
 }

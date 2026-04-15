@@ -8,11 +8,56 @@ import { runBatch } from "./batch.ts";
 const args = process.argv.slice(2);
 const forceSetup = args.includes("--setup");
 const showHistory = args.includes("--history");
+const showUi = args.includes("--ui");
 const batchIndex = args.indexOf("--batch");
 const batchDir = batchIndex !== -1 ? args[batchIndex + 1] : undefined;
-const docUrl = args.find((a) => !a.startsWith("--") && a !== batchDir);
+const outputIndex = args.indexOf("--output");
+const outputPath = outputIndex !== -1 ? args[outputIndex + 1] : undefined;
+if (outputPath && outputPath.startsWith("--")) {
+  console.error("Error: --output requires a file path (e.g., --output report.md)");
+  process.exit(1);
+}
+if (outputIndex !== -1 && !outputPath) {
+  console.error("Error: --output requires a file path");
+  process.exit(1);
+}
+const docUrl = args.find((a) => !a.startsWith("--") && a !== batchDir && a !== outputPath);
 
 async function main() {
+  // --ui: start the dashboard dev server and open browser
+  if (showUi) {
+    const { spawn } = await import("child_process");
+    const openModule = await import("open");
+    const openBrowser = openModule.default;
+    const { join } = await import("path");
+
+    const dashDir = join(import.meta.dir, "..", "dashboard");
+    const { existsSync } = await import("fs");
+    if (!existsSync(dashDir)) {
+      console.error("Dashboard not found at " + dashDir);
+      console.error("The --ui flag requires the dashboard/ directory. If you installed via binary, run from the source repo instead.");
+      process.exit(1);
+    }
+    console.log("Starting Article Checker dashboard...");
+    console.log("Opening http://localhost:3000\n");
+
+    const child = spawn("bun", ["run", "dev"], {
+      cwd: dashDir,
+      stdio: "inherit",
+      env: { ...process.env },
+    });
+
+    // Wait a bit for the server to start, then open browser
+    setTimeout(() => openBrowser("http://localhost:3000"), 3000);
+
+    // Keep alive until user presses Ctrl+C
+    child.on("exit", (code) => process.exit(code ?? 0));
+    process.on("SIGINT", () => { child.kill(); process.exit(0); });
+
+    // Block forever
+    await new Promise(() => {});
+  }
+
   // --history: show recent checks from SQLite
   if (showHistory) {
     const db = openDb();
@@ -62,14 +107,16 @@ async function main() {
     console.log('  article-checker ./my-article.md');
     console.log("");
     console.log("Options:");
-    console.log("  --batch <dir>  Check all .md/.txt files in a directory");
-    console.log("  --setup        Re-run the credential setup wizard");
-    console.log("  --history      Show the last 20 checks from history");
+    console.log("  --ui              Open the local web dashboard");
+    console.log("  --batch <dir>     Check all .md/.txt files in a directory");
+    console.log("  --output <path>   Export report to .md or .html file");
+    console.log("  --setup           Re-run the credential setup wizard");
+    console.log("  --history         Show the last 20 checks from history");
     console.log("");
     process.exit(0);
   }
 
-  await runCheck(docUrl);
+  await runCheck(docUrl, outputPath);
 }
 
 main().catch((err) => {
