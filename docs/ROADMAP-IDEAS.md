@@ -14,7 +14,7 @@
 - ~~JSON API for dashboard, LLM provider picker~~
 - ~~13 PR review fixes (security, correctness, docs)~~
 
-## Phase 5 — Context System + Agent Integration (next)
+## Done (Phase 5) — Context System + Agent Integration
 
 ### Context Library
 - **Context storage** — `~/.article-checker/contexts/` directory + `contexts` table in SQLite
@@ -43,11 +43,16 @@
 - ~~Tone improvement suggestions — rewrite suggestions in brand voice alongside violation flags~~
 - ~~Citation recommendations — verified claims include markdown citation links to source URLs~~
 
-## Phase 6B — Multi-Provider + Intelligence (remaining)
+## Done (Phase 6B) — Content Purpose + Regenerate/Fix
+- ~~Content purpose detection — classifies article type with purpose-specific recommendations~~
+- ~~Regenerate/fix engine — `--fix` flag generates AI-suggested rewrites for flagged sentences~~
+- ~~Dashboard Fix Issues panel — report detail shows CLI command when issues found~~
+- ~~MCP `regenerate_article` tool — agents can trigger regeneration~~
+- ~~9 skills total: plagiarism, AI detection, SEO, fact-check, tone, legal, summary, brief, purpose~~
+
+## Phase 6C — Multi-Provider + Intelligence (remaining)
 
 - **Model comparison** — run same article through multiple providers, compare scores side by side
-- **Regenerate/fix** — AI rewrites flagged sentences using all skill feedback + contexts
-- **Content purpose detection** — product announcement, tutorial, thought leadership → adjust scoring
 - **PDF/DOCX input** — parse uploaded documents beyond .md/.txt
 
 ## Phase 7 — Platform & Scale

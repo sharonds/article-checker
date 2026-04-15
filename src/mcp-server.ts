@@ -76,6 +76,17 @@ export function getToolDefinitions() {
         required: ["skillId", "enabled"],
       },
     },
+    {
+      name: "regenerate_article",
+      description: "Get AI-suggested rewrites for flagged sentences in an article",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          text: { type: "string", description: "The article text" },
+        },
+        required: ["text"],
+      },
+    },
   ];
 }
 
@@ -146,6 +157,13 @@ async function handleToolCall(name: string, args: Record<string, unknown>) {
       const skills = { ...config.skills, [skillId]: enabled };
       writeConfig({ skills });
       return { content: [{ type: "text", text: `Skill '${skillId}' ${enabled ? "enabled" : "disabled"}` }] };
+    }
+    case "regenerate_article": {
+      const { regenerateArticle } = await import("./regenerate.ts");
+      const text = args.text as string;
+      const checkResult = await runCheckHeadless("mcp-regenerate", { text });
+      const regen = await regenerateArticle(text, checkResult.results);
+      return { content: [{ type: "text", text: JSON.stringify(regen, null, 2) }] };
     }
     default:
       return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };

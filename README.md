@@ -30,6 +30,7 @@ Each check is a **skill** you can enable or disable. Results appear in the termi
 | **Legal Risk** | Claude/MiniMax | ~$0.002 | ❌ requires LLM key |
 | **Content Summary** | Claude/MiniMax | ~$0.002 | ❌ requires LLM key |
 | **Brief Matching** | MiniMax/Claude | ~$0.002 | ❌ requires LLM key + brief context |
+| **Content Purpose** | MiniMax/Claude | ~$0.002 | ❌ requires LLM key |
 
 All enabled skills run in parallel. Adding more skills does not increase total time significantly.
 
@@ -62,10 +63,12 @@ All enabled skills run in parallel. Adding more skills does not increase total t
 | **Tags + search** | Attach tags to checks, search across all history by text or tag via dashboard or API. |
 | **JSON API** | RESTful API at `localhost:3000/api` for running checks, managing tags, toggling skills. See [docs/api.md](docs/api.md). |
 | **Context system** | Upload tone guides, content briefs, legal policies, and style guides. Contexts are stored in SQLite and automatically loaded by relevant skills. Manage via CLI (`article-checker context add/list/show/remove`) or the dashboard Contexts page. |
-| **MCP server** | 7 tools for AI agent integration (Claude Code, Cursor, Windsurf). Start with `article-checker --mcp`. Tools: `check_article`, `list_reports`, `get_report`, `upload_context`, `list_contexts`, `get_skills`, `toggle_skill`. |
+| **MCP server** | 8 tools for AI agent integration (Claude Code, Cursor, Windsurf). Start with `article-checker --mcp`. Tools: `check_article`, `list_reports`, `get_report`, `upload_context`, `list_contexts`, `get_skills`, `toggle_skill`, `regenerate_article`. |
 | **CI mode (`--ci`)** | Exits with code 1 if any skill returns a `fail` verdict. Designed for CI/CD pipelines. |
 | **JSON output (`--json`)** | Outputs structured JSON instead of the Ink terminal UI. Ideal for scripts, agents, and piping. |
 | **Brief matching** | Checks article against an uploaded content brief. Verifies coverage of required topics, audience alignment, and tone match. Requires a `brief` context. |
+| **Content purpose detection** | Detects article type (tutorial, product announcement, case study, thought leadership, etc.) and provides purpose-specific recommendations for missing elements. |
+| **Regenerate/fix** | `article-checker --fix <file>` runs all checks then generates AI-suggested rewrites for every flagged sentence, using tone guide and legal policy contexts. |
 | **Cross-platform** | Mac (Apple Silicon + Intel), Linux, Windows. |
 
 ---
@@ -355,6 +358,9 @@ article-checker --ci ./my-article.md
 # JSON output — structured result for scripts and agents
 article-checker --json ./my-article.md
 
+# Fix flagged sentences with AI-suggested rewrites
+article-checker --fix ./my-article.md
+
 # MCP server — for Claude Code / Cursor / Windsurf
 article-checker --mcp
 ```
@@ -450,6 +456,7 @@ Approximate cost per 800-word article check with all skills enabled:
 | Legal Risk | MiniMax/Claude | ~$0.002 |
 | Content Summary | MiniMax/Claude | ~$0.002 |
 | Brief Matching | MiniMax/Claude | ~$0.002 |
+| Content Purpose | MiniMax/Claude | ~$0.002 |
 | Passage evidence (optional) | Parallel AI | ~$0.003 |
 | **Total — all skills** | | **~$0.22** |
 
@@ -535,6 +542,8 @@ Set the path: `TONE_GUIDE_FILE=/path/to/brand-voice.md`
 - Multi-language support — auto-detects English, Hebrew, Arabic, Chinese, Japanese, Korean with language-specific SEO
 - Tone improvement suggestions — rewrite suggestions in brand voice alongside violation flags
 - Citation recommendations — verified fact-check claims include source domain citations
+- Content purpose detection — classifies article type with purpose-specific recommendations
+- Regenerate/fix engine — `--fix` flag generates AI-suggested rewrites for flagged sentences
 
 ### Medium-term
 
@@ -587,7 +596,10 @@ article-checker/
 │   ├── passage.ts            # Passage matcher — finds copied sentences
 │   ├── batch.ts              # Batch checking — runs all .md/.txt files in a directory
 │   ├── checker.ts            # Headless check engine — runCheckHeadless() for MCP/CI/API
+│   ├── regenerate.ts         # Regenerate/fix engine — AI rewrites for flagged sentences
+│   ├── mcp-server.ts         # MCP server — 8 tools for agent integration
 │   ├── thresholds.ts         # Configurable pass/warn/fail score cutoffs
+│   ├── language.ts           # Language detection — English, Hebrew, Arabic, Chinese, Japanese, Korean
 │   └── skills/
 │       ├── types.ts          # Skill interface, SkillResult, Finding types
 │       ├── registry.ts       # SkillRegistry — parallel execution, error isolation
@@ -599,6 +611,7 @@ article-checker/
 │       ├── legal.ts          # LegalSkill — Claude legal risk scanner
 │       ├── summary.ts        # SummarySkill — topic, argument, audience, tone analysis
 │       ├── brief.ts          # BriefSkill — checks article against content brief
+│       ├── purpose.ts        # PurposeSkill — detects article type with recommendations
 │       └── llm.ts            # Shared LLM client factory for MiniMax/Claude/OpenRouter
 ├── dashboard/                # Local web dashboard (Next.js)
 │   ├── src/app/              # Pages: overview, reports, check, skills, settings, docs

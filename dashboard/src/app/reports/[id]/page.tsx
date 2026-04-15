@@ -6,6 +6,7 @@ import { VerdictBadge } from "@/components/verdict-badge";
 import { SkillCard, type SkillResult } from "@/components/skill-card";
 import { ReportTags } from "@/components/report-tags";
 import { ExportButtons } from "@/components/export-buttons";
+import { RegeneratePanel } from "@/components/regenerate-panel";
 import { FooterBar } from "@/components/footer-bar";
 
 function getVerdict(score: number): "pass" | "warn" | "fail" {
@@ -140,6 +141,12 @@ export default async function ReportDetailPage({
           </h2>
           <ReportTags checkId={check.id!} initialTags={checkTags} />
         </div>
+
+        {/* Fix Issues panel */}
+        {(() => {
+          const hasFixableIssues = results.some(r => r.findings?.some((f: { severity?: string; quote?: string }) => (f.severity === "warn" || f.severity === "error") && f.quote));
+          return <RegeneratePanel source={check.source} hasIssues={hasFixableIssues} />;
+        })()}
 
         {/* Skill results */}
         {results.length > 0 && (
