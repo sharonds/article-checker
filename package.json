@@ -9,7 +9,10 @@
     "start": "bun src/index.tsx",
     "setup": "bun src/index.tsx --setup",
     "build": "bash build.sh",
-    "dev": "bun --watch src/index.tsx"
+    "dev": "bun --watch src/index.tsx",
+    "test": "bun test src/*.test.ts src/skills/*.test.ts",
+    "test:dashboard": "cd dashboard && bunx vitest run",
+    "test:all": "bun run test && bun run test:dashboard"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.89.0",
