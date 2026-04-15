@@ -596,7 +596,10 @@ article-checker/
 │   ├── passage.ts            # Passage matcher — finds copied sentences
 │   ├── batch.ts              # Batch checking — runs all .md/.txt files in a directory
 │   ├── checker.ts            # Headless check engine — runCheckHeadless() for MCP/CI/API
+│   ├── regenerate.ts         # Regenerate/fix engine — AI rewrites for flagged sentences
+│   ├── mcp-server.ts         # MCP server — 8 tools for agent integration
 │   ├── thresholds.ts         # Configurable pass/warn/fail score cutoffs
+│   ├── language.ts           # Language detection — English, Hebrew, Arabic, Chinese, Japanese, Korean
 │   └── skills/
 │       ├── types.ts          # Skill interface, SkillResult, Finding types
 │       ├── registry.ts       # SkillRegistry — parallel execution, error isolation
@@ -608,6 +611,7 @@ article-checker/
 │       ├── legal.ts          # LegalSkill — Claude legal risk scanner
 │       ├── summary.ts        # SummarySkill — topic, argument, audience, tone analysis
 │       ├── brief.ts          # BriefSkill — checks article against content brief
+│       ├── purpose.ts        # PurposeSkill — detects article type with recommendations
 │       └── llm.ts            # Shared LLM client factory for MiniMax/Claude/OpenRouter
 ├── dashboard/                # Local web dashboard (Next.js)
 │   ├── src/app/              # Pages: overview, reports, check, skills, settings, docs

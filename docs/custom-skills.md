@@ -106,7 +106,7 @@ A skill that uses MiniMax or Claude to assess readability and suggest improvemen
 // src/skills/readability.ts
 import type { Skill, SkillResult, Finding } from "./types.ts";
 import type { Config } from "../config.ts";
-import { getLlmClient, getTextBlock, parseJsonResponse } from "./llm.ts";
+import { getLlmClient, parseJsonResponse } from "./llm.ts";
 
 interface ReadabilityResponse {
   score: number;
@@ -164,20 +164,13 @@ export class ReadabilitySkill implements Skill {
       };
     }
 
-    // 2. Call the LLM
-    const response = await llm.client.messages.create({
-      model: llm.model,
-      max_tokens: 1024,  // important: >= 1024 or response gets truncated
-      messages: [{ role: "user", content: buildReadabilityPrompt(text) }],
-    });
+    // 2. Call the LLM with the new llm.call() interface
+    const raw = await llm.call(buildReadabilityPrompt(text), 1024);
 
-    // 3. Extract the text block (skips MiniMax thinking blocks)
-    const raw = getTextBlock(response.content);
-
-    // 4. Parse JSON (strips markdown code fences if present)
+    // 3. Parse JSON (strips markdown code fences if present)
     const parsed = parseJsonResponse<ReadabilityResponse>(raw);
 
-    // 5. Map to SkillResult
+    // 4. Map to SkillResult
     return {
       skillId: this.id,
       name: this.name,
@@ -387,17 +380,17 @@ bun test src/skills/jargon.test.ts
 
 ## 6. MiniMax / Anthropic Tips
 
-Article Checker supports two LLM providers through the Anthropic SDK. Here is what you need to know when writing LLM-based skills:
+Article Checker supports multiple LLM providers through the Anthropic SDK. Here is what you need to know when writing LLM-based skills:
 
 | Topic | Details |
 |-------|---------|
 | **Provider priority** | `getLlmClient(config)` prefers MiniMax when `MINIMAX_API_KEY` is set. Falls back to Anthropic when only `ANTHROPIC_API_KEY` is set. Returns `null` when neither is configured. |
-| **MiniMax thinking blocks** | MiniMax M2.7 is an extended-thinking model. It always emits a `thinking` content block before the actual `text` block. Use `getTextBlock(response.content)` to skip thinking blocks and get the text. |
-| **Code fence wrapping** | MiniMax sometimes wraps JSON responses in markdown code fences (` ```json ... ``` `). Use `parseJsonResponse(raw)` to strip them before `JSON.parse`. |
-| **max_tokens** | Always set `max_tokens >= 1024`. MiniMax truncates responses at the token limit, which can break JSON output mid-object. |
-| **Model names** | MiniMax: `"MiniMax-M2.7"`. Anthropic: `"claude-haiku-4-5-20251001"`. These are defined in `LLM_MODEL` in `src/skills/llm.ts` -- use the constant, do not hardcode. |
-| **Base URL** | MiniMax uses the Anthropic SDK with `baseURL: "https://api.minimax.io/anthropic"`. This is handled by `getLlmClient()` -- you never need to set it manually. |
-| **Cost** | MiniMax: ~$0.001-0.002 per skill call. Anthropic Haiku: ~$0.001-0.002. Set `costUsd` in your result accordingly. |
+| **llm.call() interface** | Use `await llm.call(prompt, maxTokens)` to call the LLM. This interface handles thinking blocks (MiniMax), text extraction, and response formatting automatically. Pass your prompt string and max tokens (e.g., 1024). Returns raw text ready to parse. |
+| **Code fence wrapping** | Some models wrap JSON responses in markdown code fences (` ```json ... ``` `). Use `parseJsonResponse(raw)` to strip them before `JSON.parse`. |
+| **max_tokens** | Always pass `>= 1024` to `llm.call()`. Responses are truncated at the token limit, which can break JSON output mid-object. |
+| **Model names** | MiniMax: `"MiniMax-M2.7"`. Anthropic: `"claude-haiku-4-5-20251001"`. OpenRouter: configurable. These are defined in `LLM_MODEL` in `src/skills/llm.ts` -- use the constant, do not hardcode. |
+| **Base URL** | MiniMax uses the Anthropic SDK with `baseURL: "https://api.minimax.io/anthropic"`. OpenRouter: `"https://openrouter.ai/api/v1"`. These are handled by `getLlmClient()` -- you never need to set them manually. |
+| **Cost** | MiniMax: ~$0.001-0.002 per skill call. Anthropic Haiku: ~$0.001-0.002. OpenRouter: varies by model. Set `costUsd` in your result accordingly. |
 
 ---
 

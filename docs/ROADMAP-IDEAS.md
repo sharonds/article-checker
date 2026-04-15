@@ -14,7 +14,7 @@
 - ~~JSON API for dashboard, LLM provider picker~~
 - ~~13 PR review fixes (security, correctness, docs)~~
 
-## Phase 5 — Context System + Agent Integration (next)
+## Done (Phase 5) — Context System + Agent Integration
 
 ### Context Library
 - **Context storage** — `~/.article-checker/contexts/` directory + `contexts` table in SQLite
