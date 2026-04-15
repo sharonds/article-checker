@@ -300,7 +300,7 @@ function CliReference() {
       </Prose>
 
       <SubHeading>Custom output</SubHeading>
-      <CodeBlock>{`bun run article-checker <file> --output report.json`}</CodeBlock>
+      <CodeBlock>{`bun run article-checker <file> --output report.md`}</CodeBlock>
       <Prose>
         <p>Write results to a JSON file instead of the default location.</p>
       </Prose>
@@ -323,7 +323,7 @@ function CliReference() {
       <SubHeading>Launch dashboard</SubHeading>
       <CodeBlock>{`bun run article-checker --ui`}</CodeBlock>
       <Prose>
-        <p>Start the web dashboard on localhost:3060.</p>
+        <p>Start the web dashboard on localhost:3000.</p>
       </Prose>
     </div>
   );

@@ -13,6 +13,14 @@ const batchIndex = args.indexOf("--batch");
 const batchDir = batchIndex !== -1 ? args[batchIndex + 1] : undefined;
 const outputIndex = args.indexOf("--output");
 const outputPath = outputIndex !== -1 ? args[outputIndex + 1] : undefined;
+if (outputPath && outputPath.startsWith("--")) {
+  console.error("Error: --output requires a file path (e.g., --output report.md)");
+  process.exit(1);
+}
+if (outputIndex !== -1 && !outputPath) {
+  console.error("Error: --output requires a file path");
+  process.exit(1);
+}
 const docUrl = args.find((a) => !a.startsWith("--") && a !== batchDir && a !== outputPath);
 
 async function main() {

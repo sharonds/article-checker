@@ -11,7 +11,8 @@ const MAX_TEXT_LENGTH = 50_000;
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const limit = Math.min(Number(url.searchParams.get("limit") ?? "50"), 200);
+    const rawLimit = Number(url.searchParams.get("limit") ?? "50");
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50;
     const checks = getRecentChecks(limit);
     const parsed = checks.map((c) => ({
       id: c.id,

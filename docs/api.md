@@ -137,7 +137,7 @@ Search checks by text query and/or tag.
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `q` | string | Free-text search across source names and results. |
+| `q` | string | Free-text search by source name. Searching within results content is planned for a future release. |
 | `tag` | string | Filter by tag name. |
 
 **Response (200):** Same shape as `GET /api/checks`.
