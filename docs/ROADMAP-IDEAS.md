@@ -37,15 +37,17 @@
 - **Check**: article scored against brief requirements (coverage, length, message alignment)
 - **Uses context system**: reads from `brief` context type
 
-## Phase 6 — Multi-Provider + Intelligence
+## Done (Phase 6A) — Multi-Provider + Intelligence
+- ~~OpenRouter integration — one key for 200+ models, unified LlmClient.call() interface~~
+- ~~Multi-language — auto-detects English, Hebrew, Arabic, Chinese, Japanese, Korean; language-specific SEO~~
+- ~~Tone improvement suggestions — rewrite suggestions in brand voice alongside violation flags~~
+- ~~Citation recommendations — verified claims include markdown citation links to source URLs~~
 
-- **OpenRouter integration** — one key = 200+ models, user picks model per skill
+## Phase 6B — Multi-Provider + Intelligence (remaining)
+
 - **Model comparison** — run same article through multiple providers, compare scores side by side
-- **Multi-language** — detect language, adjust SEO rules (Hebrew RTL, CJK, different stop words)
 - **Regenerate/fix** — AI rewrites flagged sentences using all skill feedback + contexts
 - **Content purpose detection** — product announcement, tutorial, thought leadership → adjust scoring
-- **Tone improvement suggestions** — rewrite flagged sentences in brand voice (not just flag)
-- **Citation recommendations** — when fact-check verifies a claim, suggest inline citation with source link
 - **PDF/DOCX input** — parse uploaded documents beyond .md/.txt
 
 ## Phase 7 — Platform & Scale

@@ -15,6 +15,30 @@
 
 All enabled skills run in parallel. Skills with missing API keys skip gracefully.
 
+### LLM Providers
+
+Article Checker supports three LLM providers for AI-powered skills (fact check, tone, legal, summary, brief):
+
+| Provider | Env var | Notes |
+|----------|---------|-------|
+| MiniMax (default) | `MINIMAX_API_KEY` | Cheapest, Anthropic-compatible API |
+| Anthropic Claude | `ANTHROPIC_API_KEY` | Fallback if MiniMax not set |
+| OpenRouter | `OPENROUTER_API_KEY` | One key for 200+ models (GPT-4o, Llama, Mistral, etc.) |
+
+Set the provider via `LLM_PROVIDER` env var or the Settings page in the dashboard.
+
+### Multi-Language Support
+
+Article Checker auto-detects article language via Unicode script analysis (no external dependencies). Supported languages: English, Hebrew, Arabic, Chinese, Japanese, Korean. SEO keyword extraction uses language-specific stop words. The detected language appears in the SEO summary.
+
+### Tone Rewrite Suggestions
+
+When tone violations are found, each finding includes a suggested rewrite of the flagged passage in your brand voice -- not just the issue description.
+
+### Citation Recommendations
+
+Verified fact-check claims include markdown citation links to the source URLs used as evidence. This helps writers add proper citations to their articles.
+
 ---
 
 ## Report and Export
