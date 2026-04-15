@@ -144,8 +144,8 @@ export default async function ReportDetailPage({
 
         {/* Fix Issues panel */}
         {(() => {
-          const hasIssues = results.some(r => r.findings?.some((f: { severity?: string }) => f.severity === "warn" || f.severity === "error"));
-          return <RegeneratePanel source={check.source} hasIssues={hasIssues} />;
+          const hasFixableIssues = results.some(r => r.findings?.some((f: { severity?: string; quote?: string }) => (f.severity === "warn" || f.severity === "error") && f.quote));
+          return <RegeneratePanel source={check.source} hasIssues={hasFixableIssues} />;
         })()}
 
         {/* Skill results */}

@@ -41,16 +41,31 @@ async function main() {
     if (!source) { console.error("Usage: article-checker --fix <file>"); process.exit(1); }
 
     console.log("Running checks...");
-    const result = await runCheckHeadless(source);
-    const hasIssues = result.results.some(r => r.findings.some(f => (f.severity === "warn" || f.severity === "error") && f.quote));
+    const text = await fetchGoogleDoc(source);
+    const result = await runCheckHeadless(source, { text });
+    const hasFixableIssues = result.results.some(r => r.findings.some(f => (f.severity === "warn" || f.severity === "error") && f.quote));
 
-    if (!hasIssues) {
+    if (!hasFixableIssues) {
       console.log("\nNo fixable issues found — article is clean!");
+
+      // List non-quoted issues that exist but can't be auto-fixed
+      const hasNonFixableIssues = result.results.some(r => r.findings.some(f => (f.severity === "warn" || f.severity === "error") && !f.quote));
+      if (hasNonFixableIssues) {
+        console.log("\nNote: There are issues that cannot be auto-fixed (they lack quoted context):");
+        for (const r of result.results) {
+          const nonFixable = r.findings.filter(f => (f.severity === "warn" || f.severity === "error") && !f.quote);
+          if (nonFixable.length > 0) {
+            console.log(`  ${r.name}:`);
+            for (const f of nonFixable) {
+              console.log(`    - ${f.text}`);
+            }
+          }
+        }
+      }
       process.exit(0);
     }
 
     console.log(`Found issues. Generating rewrites...\n`);
-    const text = await fetchGoogleDoc(source);
     const regen = await regenerateArticle(text, result.results);
 
     if (regen.rewrites.length === 0) {

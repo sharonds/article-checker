@@ -83,7 +83,6 @@ export function getToolDefinitions() {
         type: "object" as const,
         properties: {
           text: { type: "string", description: "The article text" },
-          checkId: { type: "number", description: "Check ID to get results from (alternative to providing results)" },
         },
         required: ["text"],
       },

@@ -12,7 +12,8 @@ interface RegeneratePanelProps {
 export function RegeneratePanel({ source, hasIssues }: RegeneratePanelProps) {
   if (!hasIssues) return null;
 
-  const command = `article-checker --fix "${source}"`;
+  const safeSource = source.replace(/"/g, '\\"');
+  const command = `article-checker --fix "${safeSource}"`;
 
   const copyCommand = () => {
     navigator.clipboard.writeText(command);

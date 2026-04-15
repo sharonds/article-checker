@@ -58,14 +58,19 @@ export function parseRegenerateResponse(raw: string): RegenerateResult {
 export async function regenerateArticle(
   articleText: string,
   results: SkillResult[],
-  config?: Config
+  options?: { config?: Config; contexts?: Record<string, string> }
 ): Promise<RegenerateResult> {
-  const cfg = config ?? readConfig();
+  const cfg = options?.config ?? readConfig();
+  let contexts = options?.contexts;
+  let db: ReturnType<typeof openDb> | null = null;
 
-  // Load contexts from DB (readConfig doesn't populate them)
-  const db = openDb();
   try {
-    const contexts = loadAllContexts(db);
+    // Load contexts from DB only if not provided
+    if (!contexts) {
+      db = openDb();
+      contexts = loadAllContexts(db);
+    }
+
     const prompt = buildRegeneratePrompt(articleText, results, contexts);
 
     if (!prompt) return { rewrites: [], summary: "No fixable issues found" };
@@ -76,6 +81,6 @@ export async function regenerateArticle(
     const raw = await llm.call(prompt, 2048);
     return parseRegenerateResponse(raw);
   } finally {
-    db.close();
+    db?.close();
   }
 }
