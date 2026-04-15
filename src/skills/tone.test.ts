@@ -16,3 +16,8 @@ test("buildTonePrompt includes custom guide text in output", () => {
   const prompt = buildTonePrompt("test article", "Be warm and friendly");
   expect(prompt).toContain("Be warm and friendly");
 });
+
+test("prompt requests suggestion field in violations", () => {
+  const prompt = buildTonePrompt("test", "be warm");
+  expect(prompt).toContain('"suggestion"');
+});

@@ -18,7 +18,7 @@ Reply with ONLY this JSON structure, no other text:
   "verdict": <"pass" if score>=75, "warn" if 50-74, "fail" if <50>,
   "summary": "<one sentence overall assessment>",
   "violations": [
-    { "quote": "<sentence from article>", "issue": "<what tone rule it breaks>" }
+    { "quote": "<sentence from article>", "issue": "<what tone rule it breaks>", "suggestion": "<rewritten version of the sentence in the correct tone>" }
   ]
 }`;
 }
@@ -53,7 +53,7 @@ export class ToneSkill implements Skill {
 
     const raw = await llm.call(buildTonePrompt(text, toneGuide), 1024);
 
-    let parsed: { score: number; verdict: string; summary: string; violations: Array<{ quote: string; issue: string }> };
+    let parsed: { score: number; verdict: string; summary: string; violations: Array<{ quote: string; issue: string; suggestion?: string }> };
     try {
       parsed = parseJsonResponse(raw);
     } catch {
@@ -66,7 +66,7 @@ export class ToneSkill implements Skill {
 
     const findings: Finding[] = (parsed.violations ?? []).map((v) => ({
       severity: "warn" as const,
-      text: v.issue,
+      text: `${v.issue}${v.suggestion ? ` — Rewrite: "${v.suggestion}"` : ""}`,
       quote: v.quote,
     }));
 
