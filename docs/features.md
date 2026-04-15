@@ -12,6 +12,7 @@
 | Legal Risk | MiniMax/Claude | ~$0.002 | Requires API keys |
 | Content Summary | MiniMax/Claude | ~$0.002 | Requires API keys |
 | Brief Matching | MiniMax/Claude | ~$0.002 | Requires API keys + brief context |
+| Content Purpose | MiniMax/Claude | ~$0.002 | Requires API keys |
 
 All enabled skills run in parallel. Skills with missing API keys skip gracefully.
 
@@ -38,6 +39,14 @@ When tone violations are found, each finding includes a suggested rewrite of the
 ### Citation Recommendations
 
 Verified fact-check claims include source domain citations from the URLs used as evidence. This helps writers add proper citations to their articles.
+
+### Content Purpose Detection
+
+Classifies the article's content purpose (tutorial, product announcement, case study, thought leadership, how-to guide, etc.) and provides purpose-specific recommendations for missing structural elements. Scoring expectations adjust based on detected purpose.
+
+### Regenerate/Fix Engine
+
+`article-checker --fix <file>` runs all checks and then generates AI-suggested rewrites for every flagged sentence. Uses tone guide and legal policy contexts when available. Outputs before/after diffs for each issue. Also available via the `regenerate_article` MCP tool.
 
 ---
 
@@ -87,6 +96,7 @@ Additional dashboard features:
   - `--batch <dir>` — Check all files in a directory
   - `--output <path>` — Export report to `.md` or `.html`
   - `--history` — Show recent checks from SQLite
+  - `--fix <file>` — Run checks then generate AI-suggested rewrites for flagged sentences
   - `--setup` — Re-run credential wizard
 - **Custom skills** — Implement the `Skill` TypeScript interface to add your own validators. See [docs/custom-skills.md](custom-skills.md).
 
@@ -129,6 +139,7 @@ Start the server: `article-checker --mcp`
 | `list_contexts` | View saved context documents |
 | `get_skills` | See which skills are enabled |
 | `toggle_skill` | Enable/disable a skill |
+| `regenerate_article` | Get AI-suggested rewrites for flagged sentences |
 
 See [AGENTS.md](../AGENTS.md) for full integration instructions.
 

@@ -30,6 +30,7 @@ Or add to your MCP config (e.g., `.claude/settings.json`):
 | `list_contexts` | View saved context documents | - |
 | `get_skills` | See which skills are enabled | - |
 | `toggle_skill` | Enable/disable a skill | `skillId`, `enabled` |
+| `regenerate_article` | Get AI-suggested rewrites for flagged sentences | `text` |
 
 ### Example: Check an article from Claude Code
 
@@ -57,6 +58,9 @@ Or add to your MCP config (e.g., `.claude/settings.json`):
 
     # Batch check a directory
     article-checker --batch ./articles/
+
+    # Fix flagged sentences with AI-suggested rewrites
+    article-checker --fix ./article.md
 
     # Export report
     article-checker --output report.md ./article.md
