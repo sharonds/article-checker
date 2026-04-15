@@ -1,47 +1,60 @@
-# Article Checker — Roadmap Ideas
+# Article Checker — Roadmap
 
-Ideas from Sharon, collected 2026-04-15. Prioritized by user impact.
+## Done (Phase 1-3) — CLI Foundation
+- ~~7 skills: plagiarism, AI detection, SEO, fact-check, tone, legal, content summary~~
+- ~~MiniMax + Anthropic LLM providers~~
+- ~~Batch checking, configurable thresholds, keyword detection~~
+- ~~HTML reports with score rings, engine badges, disclaimer~~
+- ~~SQLite history, report export (MD/HTML)~~
+- ~~Custom skill authoring guide~~
 
-## Done (Phase 1-3)
-- ~~Content Summary skill (topic, audience, tone)~~
-- ~~Legal suggestions ("Fix: replace with...")~~
-- ~~SEO keyword detection + first-paragraph check~~
-- ~~Custom skill authoring docs~~
-- ~~Batch checking (`--batch ./articles/`)~~
-- ~~Configurable thresholds per skill~~
-- ~~Fact-check confidence levels~~
-- ~~Readability score (Flesch-Kincaid + Easy/Medium/Difficult label)~~
+## Done (Phase 4) — Web Dashboard
+- ~~Local dashboard (`article-checker --ui`) with 6 pages~~
+- ~~Tags + search, dark mode, export buttons~~
+- ~~JSON API for dashboard, LLM provider picker~~
+- ~~13 PR review fixes (security, correctness, docs)~~
 
-## Done (Phase 4)
-- ~~Report export (`--output report.md` / `--output report.html`)~~
-- ~~Local web dashboard (`article-checker --ui`)~~
-  - ~~Dashboard: stats, cost chart, verdict distribution~~
-  - ~~Reports: browse history, view details~~
-  - ~~Run Check: paste text or URL, attach tags~~
-  - ~~Skills: toggle on/off, API key status, engine labels~~
-  - ~~Settings: API key management with status dots, thresholds~~
-  - ~~Docs: in-app onboarding, skill reference, score guide, API setup~~
-  - ~~Dark mode (next-themes)~~
-  - ~~Tags + search~~
-  - ~~JSON API (docs/api.md)~~
+## Phase 5 — Context System + Agent Integration (next)
 
-## Phase 5 — Smart Content Features
-- **Brief matching** — upload a brief/requirements doc, skill checks article against it (word count, topic coverage, key messages)
-- **Content purpose detection** — product announcement, user guide, thought leadership, listicle, tutorial, case study
-- **Word count enforcement** — "this article should be 200 words" → warn if over/under
-- **Multi-language support** — detect article language, adjust SEO rules (Hebrew RTL, different stop words)
-- **Regenerate/fix** — AI rewrites flagged sentences based on all skill feedback
-- **Model comparison** — run same article through multiple LLM providers, compare results side by side
-- **PDF/DOCX input** — parse uploaded documents, not just .md/.txt and Google Docs
-- **Tone improvement suggestions** — suggest a rewritten version of each flagged sentence in brand voice
-- **Citation recommendations** — when fact-check verifies a claim, suggest inline citations with source links
+### Context Library
+- **Context storage** — `~/.article-checker/contexts/` directory + `contexts` table in SQLite
+- **Context types**: tone-guide, legal-policy, brief, style-guide, custom
+- **Upload flows**: dashboard Contexts page (upload/paste/link), CLI `article-checker context add <type> <file>`
+- **Update flows**: edit in dashboard, CLI `article-checker context update <type> <file>`, version history
+- **Auto-use in skills**: tone skill reads tone-guide, legal reads legal-policy, new brief skill reads brief
+- **Override per run**: `article-checker ./article.md --brief ./campaign-brief.md`
+- **Dashboard page**: browse contexts, preview content, upload new, edit inline, delete
 
-## Phase 6 — Team & Scale
-- **User-configurable skills** — user writes a skill prompt in the dashboard, saved as a custom skill
-- **Skill marketplace** — browse community-built skills, install with one click
+### Agent Integration
+- **MCP server** — expose as MCP tools: `check_article`, `list_reports`, `search_reports`, `upload_context`, `get_skills`. Local agents (Claude Code, Cursor) call tools directly, no HTTP
+- **AGENTS.md** — document how agents interact: MCP tools, CLI commands, context management
+- **OpenClaw skill** — `article-checker` as an OpenClaw skill with full CLI access
+- **CLI JSON output** — `article-checker --json ./article.md` returns structured JSON for piping
+- **CI/CD mode** — `article-checker --ci ./article.md` exits 1 on fail, for PR gates
+
+### Brief Matching Skill
+- **New skill**: upload a content brief (target word count, required topics, key messages, audience)
+- **Check**: article scored against brief requirements (coverage, length, message alignment)
+- **Uses context system**: reads from `brief` context type
+
+## Phase 6 — Multi-Provider + Intelligence
+
+- **OpenRouter integration** — one key = 200+ models, user picks model per skill
+- **Model comparison** — run same article through multiple providers, compare scores side by side
+- **Multi-language** — detect language, adjust SEO rules (Hebrew RTL, CJK, different stop words)
+- **Regenerate/fix** — AI rewrites flagged sentences using all skill feedback + contexts
+- **Content purpose detection** — product announcement, tutorial, thought leadership → adjust scoring
+- **Tone improvement suggestions** — rewrite flagged sentences in brand voice (not just flag)
+- **Citation recommendations** — when fact-check verifies a claim, suggest inline citation with source link
+- **PDF/DOCX input** — parse uploaded documents beyond .md/.txt
+
+## Phase 7 — Platform & Scale
+
+- **API auth** — bearer token generation in Settings, required for remote API access
+- **Vercel deployment** — cloud mode with auth, users, teams, permissions
 - **Team dashboard** — multi-user, per-writer stats, trends over time
+- **User-configurable skills** — write a skill prompt in dashboard, saved as custom skill
+- **Skill marketplace** — browse community-built skills, install with one click
 - **CMS integrations** — WordPress plugin, Ghost webhook, Webflow
-- **CI/CD hook** — `article-checker --ci` returns exit code 1 if any skill fails (for PR gates)
-- **Second AI detector** — Originality.ai cross-validation
-- **Private index** — register your published articles so Copyscape excludes them
-- **Vercel deployment** — optional cloud mode with auth
+- **Private index** — register published articles so Copyscape excludes them
+- **Landing page** — marketing site with demo, pricing, docs
