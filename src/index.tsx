@@ -24,6 +24,50 @@ if (outputIndex !== -1 && !outputPath) {
 const docUrl = args.find((a) => !a.startsWith("--") && a !== batchDir && a !== outputPath);
 
 async function main() {
+  // --fix: run checks then generate AI rewrites for flagged sentences
+  if (args.includes("--fix")) {
+    const { runCheckHeadless } = await import("./checker.ts");
+    const { regenerateArticle } = await import("./regenerate.ts");
+    const { fetchGoogleDoc } = await import("./gdoc.ts");
+
+    // Find source (same logic as --ci, skip flag values)
+    const flagsWithValues = ["--output", "--batch"];
+    const flagValueArgs = new Set<string>();
+    for (const flag of flagsWithValues) {
+      const idx = args.indexOf(flag);
+      if (idx !== -1 && args[idx + 1]) flagValueArgs.add(args[idx + 1]);
+    }
+    const source = args.find((a) => !a.startsWith("--") && !flagValueArgs.has(a));
+    if (!source) { console.error("Usage: article-checker --fix <file>"); process.exit(1); }
+
+    console.log("Running checks...");
+    const result = await runCheckHeadless(source);
+    const hasIssues = result.results.some(r => r.findings.some(f => (f.severity === "warn" || f.severity === "error") && f.quote));
+
+    if (!hasIssues) {
+      console.log("\nNo fixable issues found — article is clean!");
+      process.exit(0);
+    }
+
+    console.log(`Found issues. Generating rewrites...\n`);
+    const text = await fetchGoogleDoc(source);
+    const regen = await regenerateArticle(text, result.results);
+
+    if (regen.rewrites.length === 0) {
+      console.log("No rewrites suggested.");
+      process.exit(0);
+    }
+
+    console.log(`Suggested rewrites (${regen.rewrites.length}):\n`);
+    for (const r of regen.rewrites) {
+      console.log(`  - "${r.original}"`);
+      console.log(`  + "${r.rewritten}"`);
+      console.log(`     Reason: ${r.reason}\n`);
+    }
+    console.log(`Summary: ${regen.summary}`);
+    process.exit(0);
+  }
+
   // --ci / --json: headless check with structured output, no Ink UI
   if (args.includes("--ci") || args.includes("--json")) {
     const { runCheckHeadless } = await import("./checker.ts");
@@ -163,6 +207,7 @@ async function main() {
     console.log('  article-checker ./my-article.md');
     console.log("");
     console.log("Options:");
+    console.log("  --fix             Run checks then suggest AI rewrites for flagged sentences");
     console.log("  --mcp             Start MCP server (for Claude Code, Cursor, etc.)");
     console.log("  --ui              Open the local web dashboard");
     console.log("  --ci              Headless check — exits 1 if any skill fails");
