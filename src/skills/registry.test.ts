@@ -16,7 +16,7 @@ function mockSkill(id: string, verdict: "pass" | "warn" | "fail"): Skill {
 const baseConfig: Config = {
   copyscapeUser: "u",
   copyscapeKey: "k",
-  skills: { plagiarism: true, aiDetection: true, seo: true, factCheck: false, tone: false, legal: false },
+  skills: { plagiarism: true, aiDetection: true, seo: true, factCheck: false, tone: false, legal: false, summary: false, brief: false },
 };
 
 describe("SkillRegistry", () => {

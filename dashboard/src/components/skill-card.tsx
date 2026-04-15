@@ -18,6 +18,7 @@ const ENGINE_MAP: Record<string, string> = {
   tone: "MiniMax",
   legal: "MiniMax",
   summary: "MiniMax",
+  brief: "MiniMax",
 };
 
 interface Finding {

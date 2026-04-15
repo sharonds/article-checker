@@ -11,3 +11,8 @@ test("buildTonePrompt requests JSON output", () => {
   const prompt = buildTonePrompt("text", "guide");
   expect(prompt.toLowerCase()).toContain("json");
 });
+
+test("buildTonePrompt includes custom guide text in output", () => {
+  const prompt = buildTonePrompt("test article", "Be warm and friendly");
+  expect(prompt).toContain("Be warm and friendly");
+});
