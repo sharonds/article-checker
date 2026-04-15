@@ -3,13 +3,7 @@ import { join, extname, basename } from "path";
 import { readConfig } from "./config.ts";
 import { applyThreshold } from "./thresholds.ts";
 import { SkillRegistry } from "./skills/registry.ts";
-import { PlagiarismSkill } from "./skills/plagiarism.ts";
-import { AiDetectionSkill } from "./skills/aidetection.ts";
-import { SeoSkill } from "./skills/seo.ts";
-import { FactCheckSkill } from "./skills/factcheck.ts";
-import { ToneSkill } from "./skills/tone.ts";
-import { LegalSkill } from "./skills/legal.ts";
-import { SummarySkill } from "./skills/summary.ts";
+import { buildSkills } from "./checker.ts";
 import { openDb, insertCheck, loadAllContexts } from "./db.ts";
 import { generateReport } from "./report.ts";
 
@@ -45,26 +39,8 @@ export async function runBatch(dir: string): Promise<BatchResult[]> {
   const contexts = loadAllContexts(db);
   const configWithContexts = { ...config, contexts };
 
-  // Build skills array exactly like check.tsx
-  const allSkills = [
-    config.skills.plagiarism && new PlagiarismSkill(),
-    config.skills.aiDetection && new AiDetectionSkill(),
-    config.skills.seo && new SeoSkill(),
-    config.skills.factCheck && new FactCheckSkill(),
-    config.skills.tone && new ToneSkill(),
-    config.skills.legal && new LegalSkill(),
-    config.skills.summary && new SummarySkill(),
-  ].filter(Boolean) as (
-    | PlagiarismSkill
-    | AiDetectionSkill
-    | SeoSkill
-    | FactCheckSkill
-    | ToneSkill
-    | LegalSkill
-    | SummarySkill
-  )[];
-
-  const registry = new SkillRegistry(allSkills);
+  // Use shared buildSkills() from checker.ts (single source of truth)
+  const registry = new SkillRegistry(buildSkills(configWithContexts));
   const results: BatchResult[] = [];
 
   console.log(`\nChecking ${files.length} articles in ${dir}...\n`);

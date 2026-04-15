@@ -25,7 +25,7 @@ export interface CheckResult {
   totalCostUsd: number;
 }
 
-function buildSkills(config: Config): Skill[] {
+export function buildSkills(config: Config): Skill[] {
   const skills: Skill[] = [];
   if (config.skills.plagiarism) skills.push(new PlagiarismSkill());
   if (config.skills.aiDetection) skills.push(new AiDetectionSkill());
