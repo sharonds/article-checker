@@ -1,5 +1,30 @@
 # Checkit — Roadmap
 
+## Phase 7 — Research-Backed Editor (planning)
+
+Full strategy doc (in checkit-landing repo): `docs/superpowers/roadmap/2026-04-17-phase7-research-backed-editor.md`
+
+**Thesis:** Turn Checkit from a quality gate (runs after you write) into a research-backed editor (runs with you, gives evidence + fixes, not just flags). Every flagged issue ends with: evidence, rewrite suggestion, cited source, and a grammar pass.
+
+### New skills
+- **Grammar & Style** — LanguageTool / Sapling / LLM fallback. Deterministic grammar, punctuation, style. Fills the gap the LLM tone skill cannot catch.
+- **Academic Citation** — Semantic Scholar (free, no key required). Surfaces peer-reviewed papers for scientific/medical/financial claims. Returns DOI links.
+- **Self-Plagiarism / Topic Coverage** — Cloudflare Vectorize / Pinecone / Upstash. Indexes user's own past articles; flags repetition with link to original.
+- **Deep Fact-Check** — Exa Deep Reasoning / Parallel Task. Multi-hop reasoning for complex claims. Opt-in (slower, pricier).
+- **Claim Drill-Down UI** — Click any claim in the dashboard, see 3 sources with quoted passages.
+
+### Options-per-category model
+Each skill gets a provider dropdown in Settings. User picks engine (with speed/cost/depth/free-tier info), supplies their own API key. Checkit does not bundle tokens.
+
+### Upgrades to existing skills
+- Fact Check → `type: deep-reasoning` option; Exa Contents API `highlights` mode (10× token savings)
+- Plagiarism → Copysentry monitoring option (ongoing post-publish watch)
+- Dashboard → provider picker per skill + cost estimator before run
+
+## Phase 8 — Checkit Studio (vision)
+
+A web editor (tiptap/monaco) where writers compose WITH Checkit active. Checks run live in the margin. Rewrite co-pilot always available. Research panel on-demand. Built on Vercel AI SDK v6 + `useChat` + `ToolLoopAgent`. Vercel-deployed, authenticated, cloud config. This is a separate product from the CLI — CLI stays for power users + CI. Studio becomes the primary user-facing app for Phase 8+.
+
 ## Done (Phase 1-3) — CLI Foundation
 - ~~7 skills: plagiarism, AI detection, SEO, fact-check, tone, legal, content summary~~
 - ~~MiniMax + Anthropic LLM providers~~
@@ -55,7 +80,7 @@
 - **Model comparison** — run same article through multiple providers, compare scores side by side
 - **PDF/DOCX input** — parse uploaded documents beyond .md/.txt
 
-## Phase 7 — Platform & Scale
+## Phase 9 — Platform & Scale (deferred)
 
 - **API auth** — bearer token generation in Settings, required for remote API access
 - **Vercel deployment** — cloud mode with auth, users, teams, permissions
@@ -64,4 +89,3 @@
 - **Skill marketplace** — browse community-built skills, install with one click
 - **CMS integrations** — WordPress plugin, Ghost webhook, Webflow
 - **Private index** — register published articles so Copyscape excludes them
-- **Landing page** — marketing site with demo, pricing, docs
