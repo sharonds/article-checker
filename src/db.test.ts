@@ -1,5 +1,8 @@
 import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { Database } from "bun:sqlite";
+import { mkdtempSync, rmSync, existsSync } from "fs";
+import { tmpdir, homedir } from "os";
+import { join } from "path";
 import { createSchema, insertCheck, queryRecent, openDb, insertContext, getContext, listContexts, updateContext, deleteContext, loadAllContexts, type CheckRecord } from "./db.ts";
 
 let db: Database;
@@ -11,6 +14,17 @@ beforeEach(() => {
 
 afterEach(() => {
   db.close();
+});
+
+describe("openDb", () => {
+  test("creates parent directory if missing", () => {
+    const tmp = mkdtempSync(join(tmpdir(), "checkapp-db-test-"));
+    const nested = join(tmp, "nested", "dir", "history.db");
+    const db = openDb(nested);
+    expect(existsSync(nested)).toBe(true);
+    db.close();
+    rmSync(tmp, { recursive: true, force: true });
+  });
 });
 
 describe("insertCheck", () => {
