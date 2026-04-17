@@ -30,14 +30,20 @@ function guardLocal(req: Request): NextResponse | null {
 
 export async function GET() {
   const cfg = readAppConfig() as Record<string, unknown>;
-  const providers = (cfg.providers as Partial<Record<SkillId, SkillProviderConfig>>) ?? {};
-  return NextResponse.json({
-    providers,
-    // API keys are masked in GET for display; never returned in cleartext.
-    hasKey: Object.fromEntries(
-      Object.entries(providers).map(([k, v]) => [k, Boolean((v as SkillProviderConfig | undefined)?.apiKey)])
-    ),
-  });
+  const raw = (cfg.providers as Partial<Record<SkillId, SkillProviderConfig>>) ?? {};
+  const maskedProviders = Object.fromEntries(
+    Object.entries(raw).map(([skillId, pc]) => {
+      const v = pc as SkillProviderConfig | undefined;
+      return [skillId, v ? { provider: v.provider, extra: v.extra } : undefined];
+    })
+  );
+  const hasKey = Object.fromEntries(
+    Object.entries(raw).map(([skillId, pc]) => {
+      const v = pc as SkillProviderConfig | undefined;
+      return [skillId, Boolean(v?.apiKey)];
+    })
+  );
+  return NextResponse.json({ providers: maskedProviders, hasKey });
 }
 
 export async function PUT(req: Request) {

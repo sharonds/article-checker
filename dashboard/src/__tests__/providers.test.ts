@@ -2,7 +2,12 @@ import { describe, test, expect, vi, beforeEach } from "vitest";
 
 // Mock config + csrf reads
 vi.mock("@/lib/config", () => ({
-  readAppConfig: vi.fn(() => ({ providers: {} })),
+  readAppConfig: vi.fn(() => ({
+    providers: {
+      "fact-check": { provider: "exa-search", apiKey: "SECRET_KEY_SHOULD_NOT_LEAK", extra: { region: "us" } },
+      "grammar": { provider: "languagetool" },
+    },
+  })),
   writeAppConfig: vi.fn(() => {}),
 }));
 
@@ -21,8 +26,24 @@ describe("/api/providers", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.providers).toEqual({});
-    expect(json.hasKey).toEqual({});
+    expect(json.providers["fact-check"].provider).toBe("exa-search");
+    expect(json.hasKey["fact-check"]).toBe(true);
+    expect(json.hasKey["grammar"]).toBe(false);
+  });
+
+  test("GET masks apiKey — returns provider/extra/hasKey only", async () => {
+    const res = await GET();
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    // apiKey MUST NOT appear anywhere in the response
+    const bodyStr = JSON.stringify(json);
+    expect(bodyStr).not.toContain("SECRET_KEY_SHOULD_NOT_LEAK");
+    // But provider metadata is present
+    expect(json.providers["fact-check"].provider).toBe("exa-search");
+    expect(json.providers["fact-check"].extra.region).toBe("us");
+    // hasKey flags tracking presence
+    expect(json.hasKey["fact-check"]).toBe(true);
+    expect(json.hasKey["grammar"]).toBe(false);
   });
 
   test("PUT accepts valid body with correct CSRF + localhost host", async () => {

@@ -111,7 +111,7 @@ export function ProvidersForm({ initialProviders, skillIds }: Props) {
                 {options.map((opt) => (
                   <label
                     key={opt.id}
-                    className={`flex items-start gap-3 rounded border p-3 cursor-pointer hover:bg-accent/30 ${
+                    className={`flex items-start gap-3 rounded border p-3 cursor-pointer hover:bg-accent/30 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-1 ${
                       current?.provider === opt.id ? "border-primary bg-accent/20" : ""
                     }`}
                   >
