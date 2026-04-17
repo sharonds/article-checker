@@ -2,18 +2,25 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from "
 import { homedir } from "os";
 import { join } from "path";
 
-const CONFIG_DIR = join(homedir(), ".checkit");
-const LEGACY_CONFIG_DIR = join(homedir(), ".article-checker");
+const CONFIG_DIR = join(homedir(), ".checkapp");
+const LEGACY_DIRS = [
+  join(homedir(), ".checkit"),
+  join(homedir(), ".article-checker"),
+];
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
-// One-time migration: move ~/.article-checker → ~/.checkit if only the old exists.
-// Guarded so this is idempotent and silent in the common case.
-if (!existsSync(CONFIG_DIR) && existsSync(LEGACY_CONFIG_DIR)) {
-  try {
-    renameSync(LEGACY_CONFIG_DIR, CONFIG_DIR);
-    console.error("Migrated config from ~/.article-checker to ~/.checkit");
-  } catch (err) {
-    console.error(`Failed to migrate ~/.article-checker to ~/.checkit: ${(err as Error).message}`);
+// One-time migration: move whichever legacy dir exists to ~/.checkapp. Idempotent and silent when no legacy dir is present.
+if (!existsSync(CONFIG_DIR)) {
+  for (const legacy of LEGACY_DIRS) {
+    if (existsSync(legacy)) {
+      try {
+        renameSync(legacy, CONFIG_DIR);
+        console.error(`Migrated config from ${legacy} to ${CONFIG_DIR}`);
+        break;
+      } catch (err) {
+        console.error(`Failed to migrate ${legacy} to ${CONFIG_DIR}: ${(err as Error).message}`);
+      }
+    }
   }
 }
 
