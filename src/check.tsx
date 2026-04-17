@@ -2,11 +2,9 @@ import React, { useState, useEffect } from "react";
 import { render, Box, Text, useApp } from "ink";
 import Spinner from "ink-spinner";
 import { fetchGoogleDoc, countWords } from "./gdoc.ts";
-import { SkillRegistry } from "./skills/registry.ts";
-import { buildSkills } from "./checker.ts";
 import { readConfig } from "./config.ts";
-import { applyThreshold } from "./thresholds.ts";
-import { openDb, insertCheck } from "./db.ts";
+import { runCheckCore, loadContextsIntoConfig } from "./checker-core.ts";
+import { insertCheck } from "./db.ts";
 import { generateReport } from "./report.ts";
 import { writeFileSync } from "fs";
 import type { SkillResult } from "./skills/types.ts";
@@ -71,37 +69,34 @@ function Check({ docUrl, outputPath }: { docUrl: string; outputPath?: string }) 
         const words = countWords(text);
         setPhase({ name: "checking", words });
 
-        const config = readConfig();
-
-        const skills = buildSkills(config);
-        const registry = new SkillRegistry(skills);
-        const rawResults = await registry.runAll(text, config);
-        const results = rawResults.map((r) => ({
-          ...r,
-          verdict: applyThreshold(r.score, r.verdict, config.thresholds?.[r.skillId]),
-        }));
-        const totalCostUsd = results.reduce((s, r) => s + r.costUsd, 0);
-
-        // Save to SQLite
         const sourceLabel = process.env.ARTICLE_CHECKER_SOURCE || docUrl;
-        const db = openDb();
-        insertCheck(db, { source: sourceLabel, wordCount: words, results, totalCostUsd });
-        db.close();
+        const { config, db } = loadContextsIntoConfig(readConfig());
+        let coreResult;
+        try {
+          coreResult = await runCheckCore(text, config);
+          insertCheck(db, {
+            source: sourceLabel,
+            wordCount: words,
+            results: coreResult.results,
+            totalCostUsd: coreResult.totalCostUsd,
+          });
+        } finally {
+          db.close();
+        }
 
-        // Write HTML report
-        const reportPath = "checkapp-report.html";
-        writeFileSync(reportPath, generateReport({ source: sourceLabel, wordCount: words, results, totalCostUsd }));
+        const reportPath = outputPath ?? "checkapp-report.html";
+        writeFileSync(reportPath, generateReport({ source: sourceLabel, wordCount: words, results: coreResult.results, totalCostUsd: coreResult.totalCostUsd }));
 
-        // Export to custom path if --output was specified
+        // Export to custom path if --output was specified (redundant but kept for backwards compat)
         if (outputPath) {
-          exportReport({ source: sourceLabel, wordCount: words, results, totalCostUsd }, outputPath);
+          exportReport({ source: sourceLabel, wordCount: words, results: coreResult.results, totalCostUsd: coreResult.totalCostUsd }, outputPath);
           console.log(`\nReport exported to ${outputPath}`);
         }
 
         // Open in browser (best-effort)
         import("open").then(({ default: open }) => open(reportPath)).catch(() => {});
 
-        setPhase({ name: "done", results, words, reportPath, totalCostUsd });
+        setPhase({ name: "done", results: coreResult.results, words, reportPath, totalCostUsd: coreResult.totalCostUsd });
         setTimeout(exit, 300);
       } catch (err) {
         setPhase({ name: "error", message: String(err).replace(/^Error:\s*/, "") });
