@@ -192,4 +192,25 @@ describe("/api/providers", () => {
       })
     );
   });
+
+  test("rejects PUT from spoofed Host header (uses nextUrl.hostname instead)", async () => {
+    const req = new NextRequest(new URL("http://203.0.113.5:3000/api/providers"), {
+      method: "PUT",
+      headers: { "host": "localhost", "content-type": "application/json", "x-checkapp-csrf": "test-csrf-token" },
+      body: JSON.stringify({ skillId: "factCheck", provider: "exa-search" }),
+    });
+    const res = await PUT(req);
+    expect(res.status).toBe(403);
+  });
+
+  test("accepts PUT from [::1]:3000 without IPv6 mangling", async () => {
+    mockReadAppConfig.mockReturnValue({ providers: {} });
+    const req = new NextRequest(new URL("http://[::1]:3000/api/providers"), {
+      method: "PUT",
+      headers: { "content-type": "application/json", "x-checkapp-csrf": "test-csrf-token" },
+      body: JSON.stringify({ skillId: "fact-check", provider: "exa-search" }),
+    });
+    const res = await PUT(req);
+    expect(res.status).not.toBe(403);
+  });
 });
