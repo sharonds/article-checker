@@ -40,9 +40,9 @@ export function buildSkills(config: Config): Skill[] {
   if (config.skills.summary) skills.push(new SummarySkill());
   if (config.skills.brief) skills.push(new BriefSkill());
   if (config.skills.purpose) skills.push(new PurposeSkill());
-  if (config.skills.grammar === true) skills.push(new GrammarSkill());
-  if (config.skills.academic === true) skills.push(new AcademicSkill());
-  if (config.skills.selfPlagiarism === true) skills.push(new SelfPlagiarismSkill());
+  if (config.skills.grammar) skills.push(new GrammarSkill());
+  if (config.skills.academic) skills.push(new AcademicSkill());
+  if (config.skills.selfPlagiarism) skills.push(new SelfPlagiarismSkill());
   return skills;
 }
 

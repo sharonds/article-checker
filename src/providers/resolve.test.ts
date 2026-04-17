@@ -41,4 +41,27 @@ describe("resolveProvider", () => {
     expect(resolveProvider(base, "grammar")).toBeNull();
     expect(resolveProvider(base, "academic")).toBeNull();
   });
+
+  test("preserves undefined apiKey when explicit provider has no key", () => {
+    const r = resolveProvider(
+      { ...base, providers: { "fact-check": { provider: "exa-search" } } } as Config,
+      "fact-check",
+    );
+    expect(r?.provider).toBe("exa-search");
+    expect(r?.apiKey).toBeUndefined();
+  });
+
+  test("treats empty-string legacy copyscapeKey as missing (returns null)", () => {
+    expect(resolveProvider({ ...base, copyscapeKey: "" }, "plagiarism")).toBeNull();
+  });
+
+  test("metadata is undefined when provider id is not in registry", () => {
+    const r = resolveProvider(
+      { ...base, providers: { "fact-check": { provider: "nonexistent" as never, apiKey: "k" } } } as Config,
+      "fact-check",
+    );
+    expect(r?.provider).toBe("nonexistent");
+    expect(r?.apiKey).toBe("k");
+    expect(r?.metadata).toBeUndefined();
+  });
 });

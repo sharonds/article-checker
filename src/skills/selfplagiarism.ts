@@ -9,10 +9,13 @@ export class SelfPlagiarismSkill implements Skill {
     return {
       skillId: this.id,
       name: this.name,
-      score: 100,
-      verdict: "pass",
-      summary: "Not yet implemented — Phase 7 B5",
-      findings: [],
+      score: 0,
+      verdict: "warn",
+      summary: "Self-plagiarism skill stubbed — implementation lands in Phase 7 B5",
+      findings: [{
+        severity: "info",
+        text: "This skill is not yet implemented. It will be replaced with the real self-plagiarism check in a follow-up PR (Phase 7 B5).",
+      }],
       costUsd: 0,
     };
   }
