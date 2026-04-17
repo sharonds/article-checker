@@ -57,12 +57,19 @@ export async function indexArchive(dir: string, configOverride?: Config): Promis
     console.log(`  embedded ${file} (${vec.length} dims)`);
   }
 
-  console.log(`Upserting ${batch.length} vector(s) to index '${indexName}'...`);
-  await vectorizeUpsert({
-    accountId: pc.extra.accountId,
-    indexName,
-    apiKey: pc.apiKey,
-    vectors: batch,
-  });
+  // Cloudflare Vectorize v2 caps upsert at 1000 vectors/request + body-size limit.
+  // 500 keeps us well under both with headroom for metadata payloads.
+  const UPSERT_BATCH_SIZE = 500;
+  console.log(`Upserting ${batch.length} vector(s) to index '${indexName}' in chunks of ${UPSERT_BATCH_SIZE}...`);
+  for (let i = 0; i < batch.length; i += UPSERT_BATCH_SIZE) {
+    const chunk = batch.slice(i, i + UPSERT_BATCH_SIZE);
+    await vectorizeUpsert({
+      accountId: pc.extra.accountId,
+      indexName,
+      apiKey: pc.apiKey,
+      vectors: chunk,
+    });
+    console.log(`  upserted ${i + chunk.length}/${batch.length}`);
+  }
   console.log(`Indexed ${batch.length} article(s). Ready for self-plagiarism checks.`);
 }

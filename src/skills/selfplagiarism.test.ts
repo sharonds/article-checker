@@ -27,9 +27,8 @@ describe("SelfPlagiarismSkill", () => {
       }),
     }));
     const r = await new SelfPlagiarismSkill().run("new article text", cfgBase);
-    // 1 hit → score = 100 - 20 = 80 → pass
-    expect(r.verdict).toBe("pass");
-    expect(r.score).toBe(80);
+    expect(r.verdict).toBe("warn"); // 1 hit at 0.92 → warn-severity finding forces warn verdict (was previously pass due to score≥75)
+    expect(r.score).toBe(80); // score unchanged — 100 - 20
     expect(r.findings.length).toBe(1);
     expect(r.findings[0].sources?.[0].title).toBe("Old post");
     expect(r.findings[0].sources?.[0].url).toBe("https://blog.example/old");
@@ -47,6 +46,22 @@ describe("SelfPlagiarismSkill", () => {
     }));
     const r = await new SelfPlagiarismSkill().run("text", cfgBase);
     expect(r.findings[0].severity).toBe("error");
+  });
+
+  test("3 hits: verdict stays fail, severity override does not upgrade to warn", async () => {
+    mockFetch(urlRouter({
+      "openrouter.ai/api/v1/embeddings": async () => jsonResponse({ data: [{ embedding: Array(768).fill(0.1) }] }),
+      "vectorize/v2/indexes/articles/query": async () => jsonResponse({
+        result: { matches: [
+          { id: "p1", score: 0.9, metadata: { title: "a" } },
+          { id: "p2", score: 0.88, metadata: { title: "b" } },
+          { id: "p3", score: 0.87, metadata: { title: "c" } },
+        ] },
+      }),
+    }));
+    const r = await new SelfPlagiarismSkill().run("text", cfgBase);
+    expect(r.score).toBe(40);
+    expect(r.verdict).toBe("fail"); // base verdict fail preserved (override only downgrades pass, not upgrade warn/fail)
   });
 
   test("no matches above threshold returns pass with empty findings", async () => {

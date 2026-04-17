@@ -86,7 +86,13 @@ export class SelfPlagiarismSkill implements Skill {
       });
 
       const score = Math.max(0, 100 - hits.length * 20);
-      const verdict: SkillResult["verdict"] = score >= 75 ? "pass" : score >= 50 ? "warn" : "fail";
+      // Score-based base verdict:
+      let verdict: SkillResult["verdict"] = score >= 75 ? "pass" : score >= 50 ? "warn" : "fail";
+      // Any user-visible hit (warn or error) blocks a pass — no green verdict with
+      // a visible finding. Override only downgrades pass; never upgrades warn/fail.
+      if (verdict === "pass" && findings.some(f => f.severity === "warn" || f.severity === "error")) {
+        verdict = "warn";
+      }
       return {
         skillId: this.id, name: this.name, score, verdict,
         summary: `${hits.length} overlap(s) found with past articles`,
