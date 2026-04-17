@@ -1,5 +1,5 @@
 import { jsonWithCors } from "@/lib/cors";
-import { addTagsToCheck } from "@/lib/db";
+import { addTagsToCheck, getRecentChecks } from "@/lib/db";
 import { runCheckCore, loadContextsIntoConfig } from "@/lib/run-check";
 import { readAppConfig } from "@/lib/config";
 import Database from "better-sqlite3";
