@@ -4,6 +4,7 @@ import { getCheckById, getTagsForCheck } from "@/lib/db";
 import { ScoreRing } from "@/components/score-ring";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { SkillCard, type SkillResult } from "@/components/skill-card";
+import { normalizeSkillResult } from "@/lib/normalize";
 import { ReportTags } from "@/components/report-tags";
 import { ExportButtons } from "@/components/export-buttons";
 import { RegeneratePanel } from "@/components/regenerate-panel";
@@ -53,16 +54,22 @@ export default async function ReportDetailPage({
   let results: SkillResult[] = [];
   try {
     const parsed = JSON.parse(check.resultsJson);
+    // Every SkillResult from stored SQLite blobs passes through
+    // normalizeSkillResult so pre-Phase-7 rows (missing sources[]/citations[]/
+    // rewrite) don't crash later UI like B7's ClaimDrillDown.
     if (Array.isArray(parsed)) {
-      results = parsed.map((r: Record<string, unknown>) => ({
-        skillId: (r.skillId as string) ?? (r.skill_id as string) ?? "unknown",
-        name: (r.name as string) ?? "Unknown Skill",
-        score: typeof r.score === "number" ? r.score : 0,
-        verdict: getVerdict(typeof r.score === "number" ? r.score : 0),
-        summary: (r.summary as string) ?? "",
-        findings: Array.isArray(r.findings) ? r.findings : [],
-        costUsd: typeof r.costUsd === "number" ? r.costUsd : (typeof r.cost_usd === "number" ? r.cost_usd : 0),
-      }));
+      results = parsed.map((r) => {
+        const n = normalizeSkillResult(r);
+        return {
+          skillId: n.skillId || "unknown",
+          name: n.name || "Unknown Skill",
+          score: n.score,
+          verdict: getVerdict(n.score),
+          summary: n.summary,
+          findings: n.findings,
+          costUsd: n.costUsd,
+        };
+      });
     }
   } catch {
     results = [];
