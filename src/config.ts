@@ -96,7 +96,13 @@ export function readConfig(): Config {
 
 export async function writeConfig(config: Partial<Config>): Promise<void> {
   mkdirSync(CONFIG_DIR, { recursive: true });
-  if (!existsSync(CONFIG_FILE)) writeFileSync(CONFIG_FILE, "{}");
+  // Atomic idempotent bootstrap: exclusive-create succeeds once, subsequent
+  // callers get EEXIST and fall through. No TOCTOU between existsSync and write.
+  try {
+    writeFileSync(CONFIG_FILE, "{}", { flag: "wx" });
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
+  }
   const release = await lockfile.lock(CONFIG_FILE, {
     retries: { retries: 5, minTimeout: 50, maxTimeout: 200 },
   });
