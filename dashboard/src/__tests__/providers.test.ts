@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 
 // Mock config + csrf reads
 vi.mock("@/lib/config", () => ({
@@ -47,12 +48,11 @@ describe("/api/providers", () => {
   });
 
   test("PUT accepts valid body with correct CSRF + localhost host", async () => {
-    const req = new Request("http://localhost:3000/api/providers", {
+    const req = new NextRequest(new URL("http://localhost:3000/api/providers"), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "x-checkapp-csrf": "test-csrf-token",
-        host: "localhost:3000",
       },
       body: JSON.stringify({ skillId: "fact-check", provider: "exa-search", apiKey: "k" }),
     });
@@ -63,9 +63,9 @@ describe("/api/providers", () => {
   });
 
   test("PUT rejects missing CSRF token", async () => {
-    const req = new Request("http://localhost:3000/api/providers", {
+    const req = new NextRequest(new URL("http://localhost:3000/api/providers"), {
       method: "PUT",
-      headers: { "Content-Type": "application/json", host: "localhost:3000" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ skillId: "fact-check", provider: "exa-search", apiKey: "k" }),
     });
     const res = await PUT(req);
@@ -73,12 +73,11 @@ describe("/api/providers", () => {
   });
 
   test("PUT rejects wrong CSRF token", async () => {
-    const req = new Request("http://localhost:3000/api/providers", {
+    const req = new NextRequest(new URL("http://localhost:3000/api/providers"), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "x-checkapp-csrf": "wrong",
-        host: "localhost:3000",
       },
       body: JSON.stringify({ skillId: "fact-check", provider: "exa-search", apiKey: "k" }),
     });
@@ -87,12 +86,11 @@ describe("/api/providers", () => {
   });
 
   test("PUT rejects non-localhost host", async () => {
-    const req = new Request("http://evil.com/api/providers", {
+    const req = new NextRequest(new URL("http://evil.com/api/providers"), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "x-checkapp-csrf": "test-csrf-token",
-        host: "evil.com",
       },
       body: JSON.stringify({ skillId: "fact-check", provider: "exa-search", apiKey: "k" }),
     });
