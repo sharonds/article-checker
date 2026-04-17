@@ -1,11 +1,13 @@
 import type { Finding, SkillResult } from "./types.ts";
 
 export function normalizeFinding(raw: unknown): Finding {
+  if (!raw || typeof raw !== "object") return { severity: "info", text: "" };
   const f = raw as Partial<Finding> & Record<string, unknown>;
+  const validSeverities = ["info", "warn", "error"] as const;
   const validClaimTypes = ["scientific", "medical", "financial", "general"] as const;
   const validConfidences = ["high", "medium", "low"] as const;
   return {
-    severity: (f.severity ?? "info") as Finding["severity"],
+    severity: validSeverities.includes(f.severity as never) ? (f.severity as Finding["severity"]) : "info",
     text: typeof f.text === "string" ? f.text : "",
     quote: typeof f.quote === "string" ? f.quote : undefined,
     sources: Array.isArray(f.sources) ? (f.sources as Finding["sources"]) : undefined,
@@ -17,6 +19,9 @@ export function normalizeFinding(raw: unknown): Finding {
 }
 
 export function normalizeSkillResult(raw: unknown): SkillResult {
+  if (!raw || typeof raw !== "object") {
+    return { skillId: "", name: "", score: 0, verdict: "warn", summary: "", findings: [], costUsd: 0 };
+  }
   const r = raw as Partial<SkillResult> & Record<string, unknown>;
   const validVerdicts = ["pass", "warn", "fail"] as const;
   return {

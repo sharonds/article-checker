@@ -38,3 +38,25 @@ describe("normalizeSkillResult", () => {
     expect(r.costUsd).toBe(0);
   });
 });
+
+test("survives nested garbage in findings[] — null, strings, numbers, valid mixed", () => {
+  const r = normalizeSkillResult({ findings: [null, "oops", 42, { severity: "warn", text: "ok" }] });
+  expect(r.findings).toHaveLength(4);
+  expect(r.findings[0].text).toBe("");            // null → fallback
+  expect(r.findings[1].text).toBe("");            // string → fallback
+  expect(r.findings[2].text).toBe("");            // number → fallback
+  expect(r.findings[3].text).toBe("ok");          // valid preserved
+  expect(r.findings[3].severity).toBe("warn");
+});
+
+test("normalizeFinding returns safe default on null/undefined/primitives", () => {
+  expect(normalizeFinding(null).text).toBe("");
+  expect(normalizeFinding(undefined).severity).toBe("info");
+  expect(normalizeFinding("hi").text).toBe("");
+  expect(normalizeFinding(42).severity).toBe("info");
+});
+
+test("normalizeFinding rejects unknown severity value", () => {
+  const r = normalizeFinding({ severity: "critical", text: "x" });
+  expect(r.severity).toBe("info");
+});
