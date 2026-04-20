@@ -85,18 +85,18 @@ export default async function ReportDetailPage({
     results = [];
   }
 
-  // Exclude skipped skills from the overall score — they're 'not configured',
-  // not 'failed'. Including their zero score would drag the average down and
-  // produce a misleading FAIL header for a report that only has a few unconfigured skills.
+  // Exclude skipped skills — they're 'not configured', not 'failed'.
   const scoredResults = results.filter((r) => r.verdict !== "skipped");
   const scores = scoredResults
     .map((r) => r.score)
     .filter((s): s is number => typeof s === "number");
+  const allSkipped = results.length > 0 && scoredResults.length === 0;
   const avgScore =
     scores.length > 0
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0;
-  const verdict = getVerdict(avgScore);
+  // If every skill was skipped, don't show FAIL — show 'skipped' as the overall state.
+  const verdict: Verdict = allSkipped ? "skipped" : getVerdict(avgScore);
 
   const dateStr = new Date(check.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
