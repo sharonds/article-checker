@@ -48,7 +48,9 @@ function parseResults(check: ApiCheck): Array<{ score?: number }> {
 
 function toCheckRow(c: ApiCheck): CheckRow {
   const results = parseResults(c);
+  // Exclude skipped skills — their score=0 would unfairly drag down the avg.
   const scores = results
+    .filter((r) => (r as { verdict?: string }).verdict !== "skipped")
     .map((r) => r.score)
     .filter((s): s is number => typeof s === "number");
   const avgScore =

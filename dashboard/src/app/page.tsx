@@ -56,8 +56,13 @@ export default function DashboardPage() {
       results = [];
     }
 
+    // Exclude skipped skills from the average — they're 'not configured',
+    // not 'failed'. Including score=0 for skipped drags the average down.
     const scores = Array.isArray(results)
-      ? results.map((r) => r.score).filter((s): s is number => typeof s === "number")
+      ? results
+          .filter((r) => (r as { verdict?: string }).verdict !== "skipped")
+          .map((r) => r.score)
+          .filter((s): s is number => typeof s === "number")
       : [];
     const avgScore =
       scores.length > 0

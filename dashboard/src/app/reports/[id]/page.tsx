@@ -18,6 +18,16 @@ function getVerdict(score: number): "pass" | "warn" | "fail" {
   return "fail";
 }
 
+type Verdict = "pass" | "warn" | "fail" | "skipped";
+
+function resolveVerdict(normalizedVerdict: Verdict, score: number): Verdict {
+  // Preserve 'skipped' from the stored skill result — it's the neutral
+  // 'not configured / not applicable' state and must not be recomputed
+  // from a zero score (which would render as FAIL).
+  if (normalizedVerdict === "skipped") return "skipped";
+  return getVerdict(score);
+}
+
 export default async function ReportDetailPage({
   params,
 }: {
@@ -64,7 +74,7 @@ export default async function ReportDetailPage({
           skillId: n.skillId || "unknown",
           name: n.name || "Unknown Skill",
           score: n.score,
-          verdict: getVerdict(n.score),
+          verdict: resolveVerdict(n.verdict, n.score),
           summary: n.summary,
           findings: n.findings,
           costUsd: n.costUsd,
@@ -75,7 +85,11 @@ export default async function ReportDetailPage({
     results = [];
   }
 
-  const scores = results
+  // Exclude skipped skills from the overall score — they're 'not configured',
+  // not 'failed'. Including their zero score would drag the average down and
+  // produce a misleading FAIL header for a report that only has a few unconfigured skills.
+  const scoredResults = results.filter((r) => r.verdict !== "skipped");
+  const scores = scoredResults
     .map((r) => r.score)
     .filter((s): s is number => typeof s === "number");
   const avgScore =
