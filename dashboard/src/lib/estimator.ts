@@ -22,6 +22,11 @@ export interface AppConfigForEstimate {
     plagiarism?: boolean;
     [k: string]: boolean | undefined;
   };
+  // Legacy pre-Phase-7 fields — the estimator reads these as fallbacks when
+  // `providers` is absent (see `providerBase()` below). Typed here so test
+  // fixtures and legacy config files pass TypeScript's excess-property check.
+  exaApiKey?: string;
+  copyscapeKey?: string;
 }
 
 export interface EstimateResult {
