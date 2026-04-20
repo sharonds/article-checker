@@ -49,6 +49,12 @@ describe("sanitizeText", () => {
     expect(r.length).toBe(2001); // 2000 + "…"
     expect(r.endsWith("…")).toBe(true);
   });
+  test("does not double-ellipsize when input already ends with a terminal ellipsis", () => {
+    // Regression guard: input ending in "…" must not produce "……" after truncation.
+    const input = "This is a very long text that has already been truncated and ends with an ellipsis…";
+    const r = sanitizeText(input, 50);
+    expect(r.match(/…/g)?.length ?? 0).toBe(1);
+  });
   test("non-strings return empty", () => {
     expect(sanitizeText(null)).toBe("");
     expect(sanitizeText(undefined)).toBe("");

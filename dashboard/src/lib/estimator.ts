@@ -40,11 +40,11 @@ function providerBase(cfg: AppConfigForEstimate, skillId: SkillId): number {
   if (p?.provider) {
     return getProvider(skillId, p.provider)?.costPerCheckUsd ?? 0;
   }
-  // Legacy fallbacks for old key formats
-  if (skillId === "fact-check" && (cfg as any).exaApiKey) {
+  // Legacy fallbacks for pre-Phase-7 config shapes (typed on AppConfigForEstimate).
+  if (skillId === "fact-check" && cfg.exaApiKey) {
     return getProvider("fact-check", "exa-search")?.costPerCheckUsd ?? 0;
   }
-  if (skillId === "plagiarism" && (cfg as any).copyscapeKey) {
+  if (skillId === "plagiarism" && cfg.copyscapeKey) {
     return getProvider("plagiarism", "copyscape")?.costPerCheckUsd ?? 0;
   }
   return 0;
