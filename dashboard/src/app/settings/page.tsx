@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 import { fetchWithCsrf } from "@/lib/fetch-with-csrf";
 import { FooterBar } from "@/components/footer-bar";
+import { FactCheckTierSelector, type FactCheckTier } from "@/components/FactCheckTierSelector";
 import { LoadingSkeleton } from "@/components/loading-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface ApiKeys {
   anthropic: boolean;
   parallel: boolean;
   openrouter: boolean;
+  gemini: boolean;
 }
 
 const LLM_PROVIDERS = [
@@ -28,7 +30,7 @@ const LLM_PROVIDERS = [
   { id: "anthropic", label: "Anthropic", badge: null, disabled: false },
   { id: "openrouter", label: "OpenRouter", badge: null, disabled: false },
   { id: "openai", label: "OpenAI", badge: "Coming soon", disabled: true },
-  { id: "gemini", label: "Gemini", badge: "Coming soon", disabled: true },
+  { id: "gemini", label: "Gemini", badge: null, disabled: false },
 ];
 
 const KEY_FIELDS = [
@@ -37,6 +39,7 @@ const KEY_FIELDS = [
   { configKey: "exaApiKey", label: "Exa API Key", apiKeyId: "exa" },
   { configKey: "minimaxApiKey", label: "MiniMax API Key", apiKeyId: "minimax" },
   { configKey: "anthropicApiKey", label: "Anthropic API Key", apiKeyId: "anthropic" },
+  { configKey: "geminiApiKey", label: "Gemini API Key", apiKeyId: "gemini" },
   { configKey: "openrouterApiKey", label: "OpenRouter API Key", apiKeyId: "openrouter" },
   { configKey: "parallelApiKey", label: "Parallel API Key", apiKeyId: "parallel" },
 ];
@@ -63,9 +66,12 @@ export default function SettingsPage() {
     anthropic: false,
     parallel: false,
     openrouter: false,
+    gemini: false,
   });
 
   const [provider, setProvider] = useState("minimax");
+  const [factCheckTier, setFactCheckTier] = useState<FactCheckTier>("basic");
+  const [geminiKeyConfigured, setGeminiKeyConfigured] = useState(false);
   const [keyValues, setKeyValues] = useState<Record<string, string>>({});
   const [thresholds, setThresholds] = useState<
     Record<string, { pass: number; warn: number }>
@@ -80,6 +86,8 @@ export default function SettingsPage() {
         setConfig(data.config ?? {});
         setApiKeys(data.apiKeys ?? {});
         setProvider((data.config?.llmProvider as string) ?? "minimax");
+        setFactCheckTier((data.config?.factCheckTier as FactCheckTier) ?? "basic");
+        setGeminiKeyConfigured(Boolean(data.capabilities?.geminiKeyConfigured));
 
         // Initialize key values from masked config
         const kv: Record<string, string> = {};
@@ -122,6 +130,24 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleFactCheckTierChange(nextTier: FactCheckTier) {
+    setFactCheckTier(nextTier);
+    try {
+      const res = await fetchWithCsrf("/api/config", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ factCheckTier: nextTier }),
+      });
+      if (!res.ok) {
+        toast.error("Failed to save");
+        return;
+      }
+      toast.success("Fact-check tier updated");
+    } catch {
+      toast.error("Failed to save");
+    }
+  }
+
   async function handleSaveKeys() {
     setSavingKeys(true);
     try {
@@ -149,6 +175,7 @@ export default function SettingsPage() {
       const data = await refetchRes.json();
       setApiKeys(data.apiKeys ?? {});
       setConfig(data.config ?? {});
+      setGeminiKeyConfigured(Boolean(data.capabilities?.geminiKeyConfigured));
       // Clear inputs after save
       const kv: Record<string, string> = {};
       for (const f of KEY_FIELDS) kv[f.configKey] = "";
@@ -263,6 +290,22 @@ export default function SettingsPage() {
                   )}
                 </label>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Fact-check Tier</CardTitle>
+              <CardDescription>
+                Choose how much external research the fact-checker should perform.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FactCheckTierSelector
+                value={factCheckTier}
+                onChange={handleFactCheckTierChange}
+                geminiKeyConfigured={geminiKeyConfigured}
+              />
             </CardContent>
           </Card>
 
