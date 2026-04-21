@@ -21,6 +21,19 @@ export interface EstimateResult {
   warnings: string[];
 }
 
+export function estimateFactCheckCost(tier: Config["factCheckTier"] = "basic"): number {
+  switch (tier) {
+    case "basic":
+      return 0.04;
+    case "standard":
+      return 0.16;
+    case "premium":
+      return 1.5;
+    default:
+      return 0.04;
+  }
+}
+
 /**
  * Pre-flight cost estimate. Returns a per-skill breakdown, running total,
  * and human-readable warnings when known provider limits will be hit.

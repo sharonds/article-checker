@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { estimateRunCost } from "./estimator.ts";
+import { estimateFactCheckCost, estimateRunCost } from "./estimator.ts";
 import type { Config } from "../config.ts";
 
 const skillsOff = {
@@ -14,6 +14,12 @@ const base = (skills: Partial<Config["skills"]> = {}): Config => ({
 });
 
 describe("estimateRunCost", () => {
+  test("estimateFactCheckCost returns the configured tier pricing", () => {
+    expect(estimateFactCheckCost("basic")).toBe(0.04);
+    expect(estimateFactCheckCost("standard")).toBe(0.16);
+    expect(estimateFactCheckCost("premium")).toBe(1.5);
+  });
+
   test("fact-check scales by MAX_CLAIMS (4)", () => {
     const cfg: Config = {
       ...base({ factCheck: true }),
