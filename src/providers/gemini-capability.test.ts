@@ -1,5 +1,9 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { createGeminiCapability } from "./gemini-capability.ts";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import {
+  createGeminiCapability,
+  primeGeminiCapabilityHealthCheck,
+  resetGeminiCapabilityHealthCache,
+} from "./gemini-capability.ts";
 import { jsonResponse, mockFetch, urlRouter } from "../testing/mock-fetch.ts";
 
 const ENV_KEYS = [
@@ -24,11 +28,16 @@ function restoreEnv(snapshot: Partial<Record<(typeof ENV_KEYS)[number], string |
   }
 }
 
+beforeEach(() => {
+  resetGeminiCapabilityHealthCache();
+});
+
 afterEach(() => {
   delete process.env.GEMINI_MODEL_PRO;
   delete process.env.GEMINI_MODEL_FLASH;
   delete process.env.GEMINI_MODEL_DEEP_RESEARCH;
   delete process.env.GEMINI_API_KEY;
+  resetGeminiCapabilityHealthCache();
 });
 
 describe("createGeminiCapability", () => {
@@ -72,7 +81,48 @@ describe("createGeminiCapability", () => {
     expect(health.pro).toBe(true);
     expect(health.grounding).toBe(false);
     expect(health.deepResearch).toBe(true);
-    expect(typeof health.checkedAt).toBe("string");
+    expect(typeof health.checkedAt).toBe("number");
+  });
+
+  test("falls back to flash for chat and grounded when cached health marks pro or grounding unavailable", async () => {
+    process.env.GEMINI_API_KEY = "test-key";
+
+    mockFetch(urlRouter({
+      "models/": async (req) => {
+        const body = JSON.parse(await req.text()) as { tools?: unknown[] };
+        if (body.tools?.length) {
+          return jsonResponse({ error: "grounding down" }, 503);
+        }
+        return jsonResponse({ error: "pro down" }, 503);
+      },
+      "interactions": async () => jsonResponse({ id: "dr-1" }, 201),
+    }));
+
+    const capability = createGeminiCapability();
+    const health = await capability.checkHealth();
+
+    expect(health.pro).toBe(false);
+    expect(health.grounding).toBe(false);
+    expect(capability.getModel("chat")).toBe(capability.models.flash);
+    expect(capability.getModel("grounded")).toBe(capability.models.flash);
+    expect(capability.getModel("deep-research")).toBe(capability.models.deepResearch);
+  });
+
+  test("falls back from deep research to pro when deep research is unhealthy", async () => {
+    process.env.GEMINI_API_KEY = "test-key";
+
+    mockFetch(urlRouter({
+      "models/": async () => jsonResponse({ ok: true }),
+      "interactions": async () => jsonResponse({ error: "deep research down" }, 503),
+    }));
+
+    const capability = createGeminiCapability();
+    const health = await capability.checkHealth();
+
+    expect(health.pro).toBe(true);
+    expect(health.grounding).toBe(true);
+    expect(health.deepResearch).toBe(false);
+    expect(capability.getModel("deep-research")).toBe(capability.models.pro);
   });
 
   test("caches health results for five minutes", async () => {
@@ -106,5 +156,27 @@ describe("createGeminiCapability", () => {
 
     expect(third.checkedAt).not.toBe(first.checkedAt);
     expect(calls).toBe(6);
+  });
+
+  test("startup priming uses the shared module-level cache", async () => {
+    process.env.GEMINI_API_KEY = "test-key";
+
+    let calls = 0;
+    mockFetch(urlRouter({
+      "models/": async () => {
+        calls++;
+        return jsonResponse({ ok: true });
+      },
+      "interactions": async () => {
+        calls++;
+        return jsonResponse({ id: "dr-1" }, 201);
+      },
+    }));
+
+    await primeGeminiCapabilityHealthCheck();
+    const capability = createGeminiCapability();
+    await capability.checkHealth();
+
+    expect(calls).toBe(3);
   });
 });

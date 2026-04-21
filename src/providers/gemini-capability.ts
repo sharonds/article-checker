@@ -17,7 +17,7 @@ export interface GeminiHealth {
   pro: boolean;
   grounding: boolean;
   deepResearch: boolean;
-  checkedAt: string;
+  checkedAt: number;
 }
 
 export interface GeminiCapability {
@@ -35,44 +35,44 @@ export interface GeminiCapabilityOptions {
   timeoutMs?: number;
 }
 
+let globalCachedHealth: { value: GeminiHealth; expiresAt: number } | null = null;
+let globalInFlight: Promise<GeminiHealth> | null = null;
+
 export function createGeminiCapability(options: GeminiCapabilityOptions = {}): GeminiCapability {
   const models = resolveModels();
-  const apiKey = options.apiKey ?? process.env.GEMINI_API_KEY ?? "";
   const baseUrl = options.baseUrl ?? DEFAULT_BASE_URL;
-  const fetchImpl = options.fetch ?? globalThis.fetch;
   const now = options.now ?? Date.now;
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const cacheTtlMs = options.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
-
-  let cachedHealth: { value: GeminiHealth; expiresAt: number } | null = null;
-  let inFlight: Promise<GeminiHealth> | null = null;
+  const getFetch = () => options.fetch ?? globalThis.fetch;
 
   async function checkHealth(): Promise<GeminiHealth> {
     const current = now();
-    if (cachedHealth && cachedHealth.expiresAt > current) {
-      return cachedHealth.value;
+    if (globalCachedHealth && globalCachedHealth.expiresAt > current) {
+      return globalCachedHealth.value;
     }
-    if (inFlight) {
-      return inFlight;
+    if (globalInFlight) {
+      return globalInFlight;
     }
 
-    inFlight = runHealthChecks()
+    globalInFlight = runHealthChecks()
       .then((health) => {
-        cachedHealth = {
+        globalCachedHealth = {
           value: health,
           expiresAt: now() + cacheTtlMs,
         };
         return health;
       })
       .finally(() => {
-        inFlight = null;
+        globalInFlight = null;
       });
 
-    return inFlight;
+    return globalInFlight;
   }
 
   async function runHealthChecks(): Promise<GeminiHealth> {
-    const checkedAt = new Date(now()).toISOString();
+    const checkedAt = now();
+    const apiKey = options.apiKey ?? process.env.GEMINI_API_KEY ?? "";
     if (!apiKey) {
       return {
         pro: false,
@@ -117,12 +117,14 @@ export function createGeminiCapability(options: GeminiCapabilityOptions = {}): G
     models,
     checkHealth,
     getModel(task: GeminiTask): string {
+      const health = globalCachedHealth?.value;
       switch (task) {
         case "chat":
+          return health && !health.pro ? models.flash : models.pro;
         case "grounded":
-          return models.pro;
+          return health && !health.grounding ? models.flash : models.pro;
         case "deep-research":
-          return models.deepResearch;
+          return health && !health.deepResearch ? models.pro : models.deepResearch;
         default:
           throw new Error(`Unsupported Gemini task: ${task}`);
       }
@@ -134,7 +136,7 @@ export function createGeminiCapability(options: GeminiCapabilityOptions = {}): G
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const response = await fetchImpl(url, {
+      const response = await getFetch()(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -150,6 +152,15 @@ export function createGeminiCapability(options: GeminiCapabilityOptions = {}): G
 }
 
 export const geminiCapability = createGeminiCapability();
+
+export function primeGeminiCapabilityHealthCheck(): Promise<GeminiHealth> {
+  return geminiCapability.checkHealth();
+}
+
+export function resetGeminiCapabilityHealthCache(): void {
+  globalCachedHealth = null;
+  globalInFlight = null;
+}
 
 function resolveModels(): GeminiModels {
   return {
