@@ -262,7 +262,7 @@ export async function handleToolCall(name: string, args: Record<string, unknown>
         }
 
         const activeAudit = getActiveAuditForParent(db, parentType, parentKey);
-        if (activeAudit) {
+        if (activeAudit?.interactionId) {
           return jsonResponse({
             interactionId: activeAudit.interactionId,
             status: activeAudit.status,

@@ -286,4 +286,36 @@ describe("get_deep_audit_result", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it("returns failed deep audit results as JSON", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(async () => {
+      return new Response(JSON.stringify({
+        id: "int-failed",
+        status: "failed",
+        error: "Gemini job failed upstream",
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    try {
+      const res = await handleToolCall("get_deep_audit_result", { interactionId: "int-failed" });
+      const payload = JSON.parse(res.content[0].type === "text" ? res.content[0].text : "") as {
+        interactionId: string;
+        status: string;
+        result: SkillResult;
+      };
+
+      expect(res.isError).toBeUndefined();
+      expect(payload.interactionId).toBe("int-failed");
+      expect(payload.status).toBe("failed");
+      expect(payload.result.verdict).toBe("fail");
+      expect(payload.result.summary).toContain("Deep Audit failed");
+      expect(payload.result.error).toContain("Gemini job failed upstream");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
