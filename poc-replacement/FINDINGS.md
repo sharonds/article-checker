@@ -48,32 +48,50 @@ These POCs follow the same design principles as the fact-check research in `poc/
 
 | POC | API calls | Estimated cost | Actual cost |
 |---|---|---|---|
-| 1 — Plagiarism | 10+10 calls | ~$0.10 + ~$0.38 | **$0.48** |
+| 1 — Plagiarism (initial+extended) | 16+16 calls | ~$0.16 + ~$0.61 | **$0.77** |
 | 2 — AI Detection | — | — | — |
 | 3 — Academic Citations | — | — | — |
 | 4 — LLM Skills Swap | — | — | — |
-| **Total** | | | **$0.48 / $15.00 budget** |
+| **Total** | | | **$0.77 / $15.00 budget** |
 
 ---
 
 ## POC 1 — Plagiarism (Copyscape vs Gemini grounding)
 
 **Status:** Complete. Verdict: **augment**
-**Run date:** 2026-04-22
+**Initial run:** 2026-04-21 (10 English/Wikipedia articles)
+**Extension run:** 2026-04-22 (+3 Hebrew + 2 non-Wikipedia English + 1 Hebrew original)
+
+### Combined results (16 articles, 119 sentences, 43 plagiarised GT positives)
 
 | Metric | Copyscape | Gemini |
 |---|---|---|
-| Sentence-level accuracy | 97.3% | **100.0%** |
-| Sentence-level recall | 91.3% | **100.0%** |
+| Sentence-level accuracy | 98.3% | **100.0%** |
+| Sentence-level recall | 95.3% | **100.0%** |
 | Sentence-level precision | 100.0% | 100.0% |
-| Article-level accuracy | 90.0% | **100.0%** |
+| Article-level accuracy (16) | 93.8% (15/16) | **100.0% (16/16)** |
 | False positives | 0 | 0 |
 | Cost/article | **$0.010** | $0.038 (3.8×) |
 | Avg time/article | **~1.4s** | ~42.5s |
 
-**Key finding:** Gemini caught near-verbatim plagiarism (introductory clause added to Wikipedia
-text) that Copyscape returned 0% on. Both engines had zero false positives on paraphrased or
-original content.
+**Key findings:**
+
+1. **Near-verbatim gap** — Gemini caught near-verbatim plagiarism (introductory clause added
+   to Wikipedia text) that Copyscape returned 0% on. Both engines had zero false positives.
+
+2. **Hebrew parity** — Both engines performed equally well on Hebrew content (he.wikipedia.org
+   and idi.org.il). Language is not a differentiator.
+
+3. **Non-Wikipedia coverage is weaker in Copyscape's aggregate score** — On Britannica content
+   (heavy plagiarism, 5 verbatim sentences), Copyscape's reported similarity was only 26%
+   vs 65% on equivalent Wikipedia content. Copyscape *did* find Britannica in its match list
+   (position 8 of 27), but the aggregate similarity % is an unreliable severity signal
+   across source sites. Gemini reported a consistent 76% regardless of source site.
+
+4. **`.co.il` sites untested** — `ynet`, `mako`, `calcalist`, `themarker` blocked WebFetch.
+   Hypothesis: if Copyscape's Israeli news coverage is similar to its Britannica coverage
+   (shallow aggregate %), copies from Israeli news could register as borderline rather than
+   heavy. Treat as production-monitoring hypothesis, not proven gap.
 
 **Why not replace:** Gemini at $0.038/call is 3.8× Copyscape's $0.01 — exceeds the ≤ 2×
 replacement cost criterion. Also 30× slower.

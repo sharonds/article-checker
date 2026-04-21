@@ -519,6 +519,266 @@ export const CORPUS: PlagiarismTestCase[] = [
     overallSeverity: "none",
     sourceUrls: [],
   },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  Extension: Hebrew cases + non-Wikipedia English sources
+  //  Tests whether both engines handle:
+  //    - Hebrew (RTL, different alphabet, less Copyscape coverage?)
+  //    - Smaller/non-Wikipedia indexed sources (Britannica, ScienceDaily, IDI)
+  //  Note: Direct .co.il news fetches (ynet, mako, calcalist, themarker) failed
+  //  via WebFetch (403/404). IDI (idi.org.il) and he.wikipedia.org used instead.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── Hebrew: heavy plagiarism from Hebrew Wikipedia ────────────────────────
+
+  {
+    id: "11-heavy-hebrew-wiki-ai",
+    title: "בינה מלאכותית: מהפכה טכנולוגית (he)",
+    content: [
+      "בינה מלאכותית (באנגלית: Artificial Intelligence; בקיצור: AI) היא יכולתן של מערכות טכנולוגיות ומחשבים לדמות היבטים של תבונה אנושית, ובכלל זה למידה, הסקת מסקנות, פתרון בעיות ותפיסה חזותית או לשונית.",
+      "מדובר בתחום מרתק שצמח בקצב חסר תקדים בעשור האחרון.",
+      "בניגוד לתוכנות מחשב מסורתיות הפועלות לפי סדרת הוראות קבועה מראש, מערכות בינה מלאכותית מבוססות על אלגוריתמים המסוגלים לזהות דפוסים בתוך כמויות אדירות של נתונים, להסתגל למצבים משתנים ולבצע משימות המצריכות יכולת ניתוח מורכבת ושיקול דעת.",
+      "היישומים של הטכנולוגיה מגיעים עד לתוך כל תחומי החיים המודרניים.",
+      "בעשורים הראשונים של המאה ה-21 הפכה הבינה המלאכותית לאחת הטכנולוגיות המעצבות ביותר של האנושות.",
+      "היא נחשבת לטכנולוגיה רב-תכליתית, בדומה למנוע הקיטור או לחשמל, המהווה תשתית לשינויים עמוקים בכלכלה, בתרבות ובחברה.",
+      "חברות רבות משקיעות סכומי עתק במחקר ופיתוח של מערכות מבוססות בינה מלאכותית.",
+      "לצד השפעתה האזרחית, הבינה המלאכותית מהווה מוקד מרכזי במאבק על עוצמה גאופוליטית.",
+    ].join(" "),
+    sentences: [
+      {
+        sentence: "בינה מלאכותית (באנגלית: Artificial Intelligence; בקיצור: AI) היא יכולתן של מערכות טכנולוגיות ומחשבים לדמות היבטים של תבונה אנושית, ובכלל זה למידה, הסקת מסקנות, פתרון בעיות ותפיסה חזותית או לשונית.",
+        status: "verbatim",
+        sourceUrl: "https://he.wikipedia.org/wiki/בינה_מלאכותית",
+      },
+      { sentence: "מדובר בתחום מרתק שצמח בקצב חסר תקדים בעשור האחרון.", status: "original" },
+      {
+        sentence: "בניגוד לתוכנות מחשב מסורתיות הפועלות לפי סדרת הוראות קבועה מראש, מערכות בינה מלאכותית מבוססות על אלגוריתמים המסוגלים לזהות דפוסים בתוך כמויות אדירות של נתונים, להסתגל למצבים משתנים ולבצע משימות המצריכות יכולת ניתוח מורכבת ושיקול דעת.",
+        status: "verbatim",
+        sourceUrl: "https://he.wikipedia.org/wiki/בינה_מלאכותית",
+      },
+      { sentence: "היישומים של הטכנולוגיה מגיעים עד לתוך כל תחומי החיים המודרניים.", status: "original" },
+      {
+        sentence: "בעשורים הראשונים של המאה ה-21 הפכה הבינה המלאכותית לאחת הטכנולוגיות המעצבות ביותר של האנושות.",
+        status: "verbatim",
+        sourceUrl: "https://he.wikipedia.org/wiki/בינה_מלאכותית",
+      },
+      {
+        sentence: "היא נחשבת לטכנולוגיה רב-תכליתית, בדומה למנוע הקיטור או לחשמל, המהווה תשתית לשינויים עמוקים בכלכלה, בתרבות ובחברה.",
+        status: "verbatim",
+        sourceUrl: "https://he.wikipedia.org/wiki/בינה_מלאכותית",
+      },
+      { sentence: "חברות רבות משקיעות סכומי עתק במחקר ופיתוח של מערכות מבוססות בינה מלאכותית.", status: "original" },
+      {
+        sentence: "לצד השפעתה האזרחית, הבינה המלאכותית מהווה מוקד מרכזי במאבק על עוצמה גאופוליטית.",
+        status: "verbatim",
+        sourceUrl: "https://he.wikipedia.org/wiki/בינה_מלאכותית",
+      },
+    ],
+    // 5 verbatim / 8 total = 62.5% → heavy
+    overallSeverity: "heavy",
+    sourceUrls: ["https://he.wikipedia.org/wiki/בינה_מלאכותית"],
+  },
+
+  // ── Hebrew: heavy plagiarism from Israeli policy site (.org.il) ──────────
+
+  {
+    id: "12-heavy-hebrew-idi-policy",
+    title: "על מעונות היום והתעסוקה החרדית (he, idi.org.il)",
+    content: [
+      "בשבוע שעבר הטיל שר האוצר אביגדור ליברמן פצצה כשהתנה את התמיכה במעונות היום בעבודת הגבר.",
+      "המטרה ברורה - להביא לעלייה בשיעור הגברים החרדים הפונים להכשרה מקצועית ואקדמית ולתעסוקה.",
+      "זהו מהלך שמעורר ויכוח ציבורי נרחב בימים האחרונים.",
+      "אין ספק, מדובר בהחלטה קשה, אך גם מתבקשת.",
+      "זום-אאוט על המספרים מהעשור האחרון מספר את הסיפור כולו.",
+      "חשוב להבחין בין הרטוריקה הפוליטית סביב המהלך לבין ההשפעה הכלכלית בפועל על משפחות.",
+      "בחינה של הנתונים ההיסטוריים מעלה תמונה מורכבת שאינה חד-משמעית.",
+    ].join(" "),
+    sentences: [
+      {
+        sentence: "בשבוע שעבר הטיל שר האוצר אביגדור ליברמן פצצה כשהתנה את התמיכה במעונות היום בעבודת הגבר.",
+        status: "verbatim",
+        sourceUrl: "https://www.idi.org.il/articles/36066",
+      },
+      {
+        sentence: "המטרה ברורה - להביא לעלייה בשיעור הגברים החרדים הפונים להכשרה מקצועית ואקדמית ולתעסוקה.",
+        status: "verbatim",
+        sourceUrl: "https://www.idi.org.il/articles/36066",
+      },
+      { sentence: "זהו מהלך שמעורר ויכוח ציבורי נרחב בימים האחרונים.", status: "original" },
+      {
+        sentence: "אין ספק, מדובר בהחלטה קשה, אך גם מתבקשת.",
+        status: "verbatim",
+        sourceUrl: "https://www.idi.org.il/articles/36066",
+      },
+      {
+        sentence: "זום-אאוט על המספרים מהעשור האחרון מספר את הסיפור כולו.",
+        status: "verbatim",
+        sourceUrl: "https://www.idi.org.il/articles/36066",
+      },
+      { sentence: "חשוב להבחין בין הרטוריקה הפוליטית סביב המהלך לבין ההשפעה הכלכלית בפועל על משפחות.", status: "original" },
+      { sentence: "בחינה של הנתונים ההיסטוריים מעלה תמונה מורכבת שאינה חד-משמעית.", status: "original" },
+    ],
+    // 4 verbatim / 7 total = 57.1% → heavy
+    overallSeverity: "heavy",
+    sourceUrls: ["https://www.idi.org.il/articles/36066"],
+  },
+
+  // ── Hebrew: light plagiarism from idi.org.il ─────────────────────────────
+
+  {
+    id: "13-light-hebrew-idi",
+    title: "על שינויים כלכליים במדיניות החרדית (he, idi.org.il)",
+    content: [
+      "המדיניות הכלכלית של ישראל כלפי המגזר החרדי היא נושא רגיש שמעסיק דורות של מקבלי החלטות.",
+      "שינויים תכופים בתקציבים, בקצבאות ובתמריצים מעצבים את כלכלת המשפחות החרדיות.",
+      "בחינה של הנתונים מגלה כי בין השנים 2015-2013, עת היה נתניהו ראש ממשלה ולפיד שר האוצר (והחרדים באופוזיציה), נעשו כמה קיצוצים בתמיכה הכלכלית שניתנה לחברה החרדית, שנועדו להביא לכניסת גברים חרדים לתעסוקה.",
+      "התוצאות של אותה מדיניות נמדדות עד היום על ידי כלכלנים ואנשי מדיניות.",
+      "שינוי התנהגות דורש זמן רב, ולעיתים תוצאות של רפורמות מופיעות רק לאחר עשור.",
+      "הדיון הציבורי ממשיך להיות טעון ורגשי, גם כאשר הנתונים עצמם יחסית ברורים.",
+    ].join(" "),
+    sentences: [
+      { sentence: "המדיניות הכלכלית של ישראל כלפי המגזר החרדי היא נושא רגיש שמעסיק דורות של מקבלי החלטות.", status: "original" },
+      { sentence: "שינויים תכופים בתקציבים, בקצבאות ובתמריצים מעצבים את כלכלת המשפחות החרדיות.", status: "original" },
+      {
+        sentence: "בחינה של הנתונים מגלה כי בין השנים 2015-2013, עת היה נתניהו ראש ממשלה ולפיד שר האוצר (והחרדים באופוזיציה), נעשו כמה קיצוצים בתמיכה הכלכלית שניתנה לחברה החרדית, שנועדו להביא לכניסת גברים חרדים לתעסוקה.",
+        status: "near-verbatim",
+        sourceUrl: "https://www.idi.org.il/articles/36066",
+      },
+      { sentence: "התוצאות של אותה מדיניות נמדדות עד היום על ידי כלכלנים ואנשי מדיניות.", status: "original" },
+      { sentence: "שינוי התנהגות דורש זמן רב, ולעיתים תוצאות של רפורמות מופיעות רק לאחר עשור.", status: "original" },
+      { sentence: "הדיון הציבורי ממשיך להיות טעון ורגשי, גם כאשר הנתונים עצמם יחסית ברורים.", status: "original" },
+    ],
+    // 1 near-verbatim / 6 total → light
+    overallSeverity: "light",
+    sourceUrls: ["https://www.idi.org.il/articles/36066"],
+  },
+
+  // ── Hebrew: original (false-positive test) ────────────────────────────────
+
+  {
+    id: "14-original-hebrew",
+    title: "טיפים לבישול בייתי (he, original)",
+    content: [
+      "בישול ביתי הוא יותר מדרך להכין אוכל - הוא דרך חיים ודרך להכיר את עצמך.",
+      "לפני שמתחילים להשקיע בסירים יקרים ובמכשירים מתקדמים, כדאי לבחון אילו כלים באמת חסרים במטבח.",
+      "סכין חדה ואיכותית היא השקעה משתלמת ששווה יותר מכל מכשיר חשמלי מתוחכם.",
+      "טעם של תבלינים טריים שונה לחלוטין מטעם של אלה ששוכבים במזווה שנה.",
+      "כדאי לקנות תבלינים בכמויות קטנות ולטחון לפי הצורך, במיוחד פלפל שחור וכמון.",
+      "הטעם של מזון מושפע מאיכות החומרים לא פחות מאשר מהטכניקה, ולעיתים אף יותר.",
+      "אחד הסודות הגדולים של בישול טעים הוא סבלנות - לתת לבצל להשחים לאט ולא לדחוק את התהליך.",
+    ].join(" "),
+    sentences: [
+      { sentence: "בישול ביתי הוא יותר מדרך להכין אוכל - הוא דרך חיים ודרך להכיר את עצמך.", status: "original" },
+      { sentence: "לפני שמתחילים להשקיע בסירים יקרים ובמכשירים מתקדמים, כדאי לבחון אילו כלים באמת חסרים במטבח.", status: "original" },
+      { sentence: "סכין חדה ואיכותית היא השקעה משתלמת ששווה יותר מכל מכשיר חשמלי מתוחכם.", status: "original" },
+      { sentence: "טעם של תבלינים טריים שונה לחלוטין מטעם של אלה ששוכבים במזווה שנה.", status: "original" },
+      { sentence: "כדאי לקנות תבלינים בכמויות קטנות ולטחון לפי הצורך, במיוחד פלפל שחור וכמון.", status: "original" },
+      { sentence: "הטעם של מזון מושפע מאיכות החומרים לא פחות מאשר מהטכניקה, ולעיתים אף יותר.", status: "original" },
+      { sentence: "אחד הסודות הגדולים של בישול טעים הוא סבלנות - לתת לבצל להשחים לאט ולא לדחוק את התהליך.", status: "original" },
+    ],
+    overallSeverity: "none",
+    sourceUrls: [],
+  },
+
+  // ── English: heavy plagiarism from Britannica (non-Wikipedia) ────────────
+
+  {
+    id: "15-heavy-britannica-photosynthesis",
+    title: "The Miracle of Photosynthesis (Britannica source)",
+    content: [
+      "Photosynthesis, the process by which green plants and certain other organisms transform light energy into chemical energy.",
+      "This process has powered life on our planet for billions of years.",
+      "During photosynthesis in green plants, light energy is captured and used to convert water, carbon dioxide, and minerals into oxygen and energy-rich organic compounds.",
+      "Scientists continue to uncover new details about the molecular choreography involved.",
+      "It would be impossible to overestimate the importance of photosynthesis in the maintenance of life on Earth.",
+      "The Great Oxidation Event, which began about 2.4 billion years ago and was largely driven by the photosynthetic cyanobacteria, raised atmospheric oxygen to nearly 1 percent of present levels over a span of 600 million years, paving the way for the evolution of most forms of multicellular life.",
+      "Without that single biochemical innovation, complex animal life would never have emerged.",
+      "Photosynthesis completely transformed Earth's environment and biosphere.",
+    ].join(" "),
+    sentences: [
+      {
+        sentence: "Photosynthesis, the process by which green plants and certain other organisms transform light energy into chemical energy.",
+        status: "verbatim",
+        sourceUrl: "https://www.britannica.com/science/photosynthesis",
+      },
+      { sentence: "This process has powered life on our planet for billions of years.", status: "original" },
+      {
+        sentence: "During photosynthesis in green plants, light energy is captured and used to convert water, carbon dioxide, and minerals into oxygen and energy-rich organic compounds.",
+        status: "verbatim",
+        sourceUrl: "https://www.britannica.com/science/photosynthesis",
+      },
+      { sentence: "Scientists continue to uncover new details about the molecular choreography involved.", status: "original" },
+      {
+        sentence: "It would be impossible to overestimate the importance of photosynthesis in the maintenance of life on Earth.",
+        status: "verbatim",
+        sourceUrl: "https://www.britannica.com/science/photosynthesis",
+      },
+      {
+        sentence: "The Great Oxidation Event, which began about 2.4 billion years ago and was largely driven by the photosynthetic cyanobacteria, raised atmospheric oxygen to nearly 1 percent of present levels over a span of 600 million years, paving the way for the evolution of most forms of multicellular life.",
+        status: "verbatim",
+        sourceUrl: "https://www.britannica.com/science/photosynthesis",
+      },
+      { sentence: "Without that single biochemical innovation, complex animal life would never have emerged.", status: "original" },
+      {
+        sentence: "Photosynthesis completely transformed Earth's environment and biosphere.",
+        status: "verbatim",
+        sourceUrl: "https://www.britannica.com/science/photosynthesis",
+      },
+    ],
+    // 5 verbatim / 8 total = 62.5% → heavy
+    overallSeverity: "heavy",
+    sourceUrls: ["https://www.britannica.com/science/photosynthesis"],
+  },
+
+  // ── English: heavy plagiarism from ScienceDaily (non-Wikipedia) ──────────
+
+  {
+    id: "16-heavy-sciencedaily-ocean",
+    title: "Understanding Ocean Currents (ScienceDaily source)",
+    content: [
+      "An ocean current is any more or less permanent or continuous, directed movement of ocean water that flows in one of the Earth's oceans.",
+      "Oceanographers have studied these movements for over a century, yet many mysteries remain.",
+      "The currents are generated from the forces acting upon the water like the earth's rotation, the wind, the temperature and salinity differences and the gravitation of the moon.",
+      "These forces interact in complex ways across vast distances and multiple depths.",
+      "The depth contours, the shoreline and other currents influence the current's direction and strength.",
+      "Ocean currents can flow for thousands of kilometers.",
+      "They are very important in determining the climates of the continents, especially those regions bordering on the ocean.",
+      "Disruption to these flows, such as that caused by melting polar ice, would have global consequences.",
+    ].join(" "),
+    sentences: [
+      {
+        sentence: "An ocean current is any more or less permanent or continuous, directed movement of ocean water that flows in one of the Earth's oceans.",
+        status: "verbatim",
+        sourceUrl: "https://www.sciencedaily.com/terms/ocean_current.htm",
+      },
+      { sentence: "Oceanographers have studied these movements for over a century, yet many mysteries remain.", status: "original" },
+      {
+        sentence: "The currents are generated from the forces acting upon the water like the earth's rotation, the wind, the temperature and salinity differences and the gravitation of the moon.",
+        status: "verbatim",
+        sourceUrl: "https://www.sciencedaily.com/terms/ocean_current.htm",
+      },
+      { sentence: "These forces interact in complex ways across vast distances and multiple depths.", status: "original" },
+      {
+        sentence: "The depth contours, the shoreline and other currents influence the current's direction and strength.",
+        status: "verbatim",
+        sourceUrl: "https://www.sciencedaily.com/terms/ocean_current.htm",
+      },
+      {
+        sentence: "Ocean currents can flow for thousands of kilometers.",
+        status: "verbatim",
+        sourceUrl: "https://www.sciencedaily.com/terms/ocean_current.htm",
+      },
+      {
+        sentence: "They are very important in determining the climates of the continents, especially those regions bordering on the ocean.",
+        status: "verbatim",
+        sourceUrl: "https://www.sciencedaily.com/terms/ocean_current.htm",
+      },
+      { sentence: "Disruption to these flows, such as that caused by melting polar ice, would have global consequences.", status: "original" },
+    ],
+    // 5 verbatim / 8 total = 62.5% → heavy
+    overallSeverity: "heavy",
+    sourceUrls: ["https://www.sciencedaily.com/terms/ocean_current.htm"],
+  },
 ];
 
 // ── Derived stats (sanity check) ──────────────────────────────────────────────

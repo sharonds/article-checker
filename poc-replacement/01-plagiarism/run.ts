@@ -326,18 +326,24 @@ function articleLevelCorrect(
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
+// Optional filter: FILTER=hebrew or FILTER=11-,12- to run a subset
+const FILTER = process.env.FILTER;
+const selectedCorpus = FILTER
+  ? CORPUS.filter((c) => FILTER.split(",").some((f) => c.id.includes(f.trim())))
+  : CORPUS;
+
 const LINE = "─".repeat(72);
 console.log(`\n${"═".repeat(72)}`);
 console.log(`  POC 1 — Plagiarism: Copyscape vs Gemini grounding`);
 console.log(`${"═".repeat(72)}`);
-console.log(`  Corpus   : ${CORPUS.length} articles (3 heavy / 3 light / 2 paraphrased / 2 original)`);
+console.log(`  Corpus   : ${selectedCorpus.length} articles${FILTER ? ` (filter: ${FILTER})` : " (full corpus)"}`);
 console.log(`  Started  : ${new Date().toISOString()}\n`);
 
 const scores: ArticleScore[] = [];
 let totalCopyscapeCost = 0;
 let totalGeminiCost = 0;
 
-for (const article of CORPUS) {
+for (const article of selectedCorpus) {
   console.log(`\n${LINE}`);
   console.log(`  [${article.id}] ${article.title}`);
   console.log(`  Severity : ${article.overallSeverity.toUpperCase()}`);
@@ -409,7 +415,7 @@ for (const article of CORPUS) {
 // ── Aggregate scores ──────────────────────────────────────────────────────────
 
 console.log(`\n\n${"═".repeat(72)}`);
-console.log(`  AGGREGATE RESULTS — ${CORPUS.length} articles`);
+console.log(`  AGGREGATE RESULTS — ${selectedCorpus.length} articles`);
 console.log(`${"═".repeat(72)}`);
 
 const allCsBinary: BinaryResult[] = scores.flatMap(s => s.copyscape.sentenceLevelBinaryResults);
@@ -428,16 +434,16 @@ printConfusionMatrix("Copyscape — sentence level (all articles)", csCmAgg, csP
 printConfusionMatrix("Gemini    — sentence level (all articles)", gemCmAgg, gemPrfAgg);
 
 console.log(`\n  Article-level accuracy`);
-console.log(`  Copyscape: ${csArticleCorrect}/${CORPUS.length} (${fmtPct(csArticleCorrect / CORPUS.length)})`);
-console.log(`  Gemini   : ${gemArticleCorrect}/${CORPUS.length} (${fmtPct(gemArticleCorrect / CORPUS.length)})`);
+console.log(`  Copyscape: ${csArticleCorrect}/${selectedCorpus.length} (${fmtPct(csArticleCorrect / selectedCorpus.length)})`);
+console.log(`  Gemini   : ${gemArticleCorrect}/${selectedCorpus.length} (${fmtPct(gemArticleCorrect / selectedCorpus.length)})`);
 console.log(`\n  Gemini source-URL match rate (avg): ${fmtPct(avgGemUrlMatch)}`);
 
 console.log(`\n  Cost`);
-console.log(`  Copyscape : $${totalCopyscapeCost.toFixed(4)} ($${COPYSCAPE_COST_PER_SEARCH_USD}/search × ${CORPUS.length})`);
-console.log(`  Gemini    : $${totalGeminiCost.toFixed(4)} (~$0.038/call × ${CORPUS.length})`);
+console.log(`  Copyscape : $${totalCopyscapeCost.toFixed(4)} ($${COPYSCAPE_COST_PER_SEARCH_USD}/search × ${selectedCorpus.length})`);
+console.log(`  Gemini    : $${totalGeminiCost.toFixed(4)} (~$0.038/call × ${selectedCorpus.length})`);
 console.log(`  Ratio     : Gemini is ${(totalGeminiCost / totalCopyscapeCost).toFixed(1)}× more expensive`);
 console.log(`  Acceptance criterion: replace if Gemini ≤ $${(COPYSCAPE_COST_PER_SEARCH_USD * 2).toFixed(3)}/search (2× Copyscape)`);
-console.log(`  Gemini cost per call: $${(totalGeminiCost / CORPUS.length).toFixed(4)} → ${totalGeminiCost / CORPUS.length <= COPYSCAPE_COST_PER_SEARCH_USD * 2 ? "✅ within" : "❌ exceeds"} 2× threshold`);
+console.log(`  Gemini cost per call: $${(totalGeminiCost / selectedCorpus.length).toFixed(4)} → ${totalGeminiCost / selectedCorpus.length <= COPYSCAPE_COST_PER_SEARCH_USD * 2 ? "✅ within" : "❌ exceeds"} 2× threshold`);
 
 // ── Save results ──────────────────────────────────────────────────────────────
 
@@ -445,10 +451,10 @@ const resultsDir = join(import.meta.dir);
 const outFile = join(resultsDir, `results-${Date.now()}.json`);
 writeFileSync(outFile, JSON.stringify({
   timestamp: new Date().toISOString(),
-  corpus: CORPUS.map(c => ({ id: c.id, severity: c.overallSeverity, sentences: c.sentences.length })),
+  corpus: selectedCorpus.map(c => ({ id: c.id, severity: c.overallSeverity, sentences: c.sentences.length })),
   aggregate: {
-    copyscape: { cm: csCmAgg, prf: csPrfAgg, articleAccuracy: csArticleCorrect / CORPUS.length, totalCost: totalCopyscapeCost },
-    gemini: { cm: gemCmAgg, prf: gemPrfAgg, articleAccuracy: gemArticleCorrect / CORPUS.length, avgSourceUrlMatchRate: avgGemUrlMatch, totalCost: totalGeminiCost },
+    copyscape: { cm: csCmAgg, prf: csPrfAgg, articleAccuracy: csArticleCorrect / selectedCorpus.length, totalCost: totalCopyscapeCost },
+    gemini: { cm: gemCmAgg, prf: gemPrfAgg, articleAccuracy: gemArticleCorrect / selectedCorpus.length, avgSourceUrlMatchRate: avgGemUrlMatch, totalCost: totalGeminiCost },
   },
   perArticle: scores,
 }, null, 2));

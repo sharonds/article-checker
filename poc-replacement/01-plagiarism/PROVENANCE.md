@@ -22,6 +22,12 @@ CC BY-SA 4.0 provided attribution is given. This document serves as that attribu
 | 08-paraphrased-ocean-currents | Ocean current | https://en.wikipedia.org/wiki/Ocean_current | CC BY-SA 4.0 |
 | 09-original-indoor-plants | — | No source (original) | — |
 | 10-original-meeting-agendas | — | No source (original) | — |
+| 11-heavy-hebrew-wiki-ai | בינה מלאכותית | https://he.wikipedia.org/wiki/בינה_מלאכותית | CC BY-SA 4.0 |
+| 12-heavy-hebrew-idi-policy | מעונות היום (IDI) | https://www.idi.org.il/articles/36066 | Quoted under research fair-use |
+| 13-light-hebrew-idi | מדיניות חרדית (IDI) | https://www.idi.org.il/articles/36066 | Quoted under research fair-use |
+| 14-original-hebrew | — | No source (original) | — |
+| 15-heavy-britannica-photosynthesis | Photosynthesis | https://www.britannica.com/science/photosynthesis | Quoted under research fair-use |
+| 16-heavy-sciencedaily-ocean | Ocean current | https://www.sciencedaily.com/terms/ocean_current.htm | Quoted under research fair-use |
 
 ---
 
@@ -47,6 +53,30 @@ CC BY-SA 4.0 provided attribution is given. This document serves as that attribu
 No individual quoted span in the verbatim test sentences exceeds the length of the full
 Wikipedia sentences (typically 20–50 words). This usage is consistent with CC BY-SA 4.0
 terms and standard academic fair-use practice for research and testing corpora.
+
+Britannica, ScienceDaily, and IDI content is quoted at sentence-level (typically 15–40 words
+per sentence) for research purposes only. Each quote is attributed with its source URL in
+the corpus. No article in this corpus is distributed outside this private research
+repository.
+
+## `.co.il` fetch attempts (not in corpus)
+
+Direct fetch attempts against the following sites failed during corpus construction:
+
+| URL | Status |
+|---|---|
+| gov.il/he/pages/artificial-intelligence | 403 |
+| calcalist.co.il/calcalistech/article/bj9xvnhyl | 404 |
+| ynet.co.il/digital-time/article/sk3hbduxdkg | 404 |
+| ynet.co.il/digital-time/article/hyg0gzmqm | 404 |
+| kan.org.il/content/kan-news/science | 403 |
+| mako.co.il/news-science | no article body returned |
+| themarker.com/technation/... | 404 |
+| davidson.org.il/science-environment | 404 |
+
+As a result, Hebrew coverage in this corpus is limited to Hebrew Wikipedia and IDI.
+Future work: obtain Israeli news content via alternative means (user-provided samples,
+archived pages) to test Copyscape coverage of Israeli news sites directly.
 
 ---
 

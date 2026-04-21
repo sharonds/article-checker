@@ -1,8 +1,22 @@
 # POC 1 Results — Plagiarism (Copyscape vs Gemini grounding)
 
-**Run date:** 2026-04-22
-**Corpus:** 10 articles — 3 heavy (>40% verbatim), 3 light (1–3 verbatim/near-verbatim), 2 paraphrased, 2 original
-**Total sentences:** 75 (23 plagiarised ground-truth positives)
+**Initial run:** 2026-04-21 (10 English articles from Wikipedia)
+**Extension run:** 2026-04-22 (+3 Hebrew articles + 2 non-Wikipedia English + 1 original Hebrew)
+**Full corpus:** 16 articles — 119 sentences (43 plagiarised ground-truth positives)
+
+## Combined aggregate across both runs
+
+| Metric | Copyscape | Gemini grounding |
+|---|---|---|
+| TP | 41 | 43 |
+| FP | 0 | 0 |
+| TN | 76 | 76 |
+| FN | 2 | 0 |
+| **Accuracy (n=119 sentences)** | **98.3%** | **100.0%** |
+| **Recall** | **95.3%** | **100.0%** |
+| **Precision** | **100.0%** | **100.0%** |
+| **Article-level (n=16)** | **15/16 (93.8%)** | **16/16 (100%)** |
+| Cost total | $0.16 | $0.608 |
 
 ---
 
@@ -160,6 +174,70 @@ Gemini takes ~30× longer per article. Copyscape is near-instant.
 
 ---
 
+## Extension run — Hebrew + non-Wikipedia sources (6 articles)
+
+Added after initial run at the user's request. Rationale: English Wikipedia is the most
+obvious Copyscape detection target. Testing Hebrew language content and smaller
+non-Wikipedia sources reveals whether accuracy holds outside the "easy case."
+
+**Note on `.co.il` news sites:** `ynet.co.il`, `mako.co.il`, `calcalist.co.il`, and
+`themarker.com` all returned 403/404 to WebFetch — could not be used as corpus sources.
+Substituted `he.wikipedia.org` (Hebrew language) and `idi.org.il` (Israeli policy site,
+.org.il) which were accessible.
+
+### Extension corpus
+
+| ID | Lang | Severity | Source | Copyscape | Gemini |
+|---|---|---|---|---|---|
+| 11-heavy-hebrew-wiki-ai | he | heavy | he.wikipedia.org | 76% sim, ✅ 5/5 | 77% sim, ✅ 5/5 |
+| 12-heavy-hebrew-idi-policy | he | heavy | idi.org.il | 59% sim, ✅ 4/4 | 60% sim, ✅ 4/4 |
+| 13-light-hebrew-idi | he | light | idi.org.il | 29% sim, ✅ 1/1 | 30% sim, ✅ 1/1 |
+| 14-original-hebrew | he | none | — | 0%, ✅ | 0%, ✅ |
+| 15-heavy-britannica-photosynthesis | en | heavy | britannica.com | **26% sim** (see note) | **76% sim** |
+| 16-heavy-sciencedaily-ocean | en | heavy | sciencedaily.com | 69% sim, ✅ 5/5 | 69% sim, ✅ 5/5 |
+
+**Extension sub-aggregate:** Both engines 100% accuracy / 100% recall / 0 FP on these 6.
+
+### Key findings from the extension
+
+**1. Hebrew works for both engines — same performance as English.**
+Both Copyscape and Gemini correctly detected Hebrew verbatim copies from Hebrew Wikipedia
+and from `idi.org.il`. Article 13 shows both engines correctly detected a single
+near-verbatim Hebrew sentence embedded in otherwise original Hebrew text.
+
+- The Hebrew RTL text, Hebrew alphabet, and mixed Hebrew+English text (e.g. "בינה מלאכותית
+  (באנגלית: Artificial Intelligence; בקיצור: AI)") were all handled correctly.
+- Copyscape found `inn.co.il` as a second hit on the `idi.org.il` content — the same
+  article republished. Gemini correctly attributed to `idi.org.il` directly.
+
+**2. Copyscape's Britannica similarity score is anomalously low (26%).**
+Article 15 contains 5 verbatim Britannica sentences (62.5% of the article). Copyscape found
+Britannica in its match list (position 8, with the exact `britannica.com/science/photosynthesis`
+URL), but reported overall similarity of only **26%** — much lower than the 65% it reported
+on the equivalent Wikipedia content (article 01).
+
+Why this matters: Copyscape's 26% similarity falls between the `review` threshold (16%) and
+`rewrite` threshold (26%) — borderline verdict. A site with shallower Copyscape crawl depth
+could drop below the detection threshold entirely. Gemini reported 76% for the same content,
+consistent with its Wikipedia score.
+
+**Implication:** Copyscape's aggregate similarity percentage is unreliable as a severity
+signal across different source sites. The match-URL list is more trustworthy than the
+aggregate %. This is a real architectural limit that's not visible when testing on Wikipedia.
+
+**3. Gemini's source attribution precision is consistent across sites.**
+100% source-URL match rate across all 6 extension articles, including Hebrew sources.
+Copyscape needed to return 27 matches to surface Britannica at position 8 — Gemini named
+it directly as the top source.
+
+### Extension cost
+
+| | Copyscape | Gemini |
+|---|---|---|
+| 6 extension articles | $0.060 | $0.228 |
+
+---
+
 ## Verdict
 
 ### **augment**
@@ -187,6 +265,27 @@ on borderline cases rather than all articles.
 
 **The near-verbatim gap is real and worth addressing.** An article that eases through
 Copyscape detection with a single added clause is a known attack vector.
+
+**Extension findings strengthen the augment verdict:**
+- Hebrew support is equivalent for both engines — not a differentiator
+- Copyscape's aggregate similarity % is unreliable across non-Wikipedia sources (26% on
+  Britannica heavy plagiarism vs 65% on equivalent Wikipedia content). An article
+  plagiarised from a less-crawled site could slip below Copyscape's verdict thresholds
+  even when Copyscape technically found the source in its match list
+- Gemini's similarity estimate (76%) and source attribution remained consistent regardless
+  of source site — no "source-site-coverage" dependency
+
+This specifically reinforces the **hybrid architecture**: Gemini is a useful secondary
+signal for Copyscape verdict boundaries (15–30% similarity = ambiguous zone where Copyscape
+may underscore near-verbatim or weakly-indexed content).
+
+### `.co.il` news site caveat (not tested)
+
+Real Israeli news sites (`ynet.co.il`, `mako.co.il`, `calcalist.co.il`, `themarker.com`)
+blocked WebFetch. If Copyscape's coverage of these sites is similar to its Britannica
+coverage (shallow), copies from Israeli news could register as borderline rather than
+heavy plagiarism — a gap the hybrid approach would catch. This is untested; treat as a
+hypothesis for production monitoring rather than a proven gap.
 
 ---
 
