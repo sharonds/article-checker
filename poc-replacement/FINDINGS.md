@@ -14,7 +14,7 @@ _Filled in after all four POCs complete._
 |---|---|---|---|
 | Copyscape (plagiarism) | **augment** | 10 articles, 75 sentences, 0 FP | POC 1 |
 | Copyscape (AI detection) | **augment** | 20 samples, complementary failure modes | POC 2 |
-| Semantic Scholar (citations) | TBD | — | POC 3 |
+| Semantic Scholar → OpenAlex (citations) | **replace / hybrid** | 10 claims, Gem 70%/10% gold recall | POC 3 |
 | LLM (tone/legal/summary/brief/purpose) | TBD | — | POC 4 |
 
 Verdict options: `keep` / `augment` / `replace` / `reject-as-unsuitable`
@@ -50,9 +50,9 @@ These POCs follow the same design principles as the fact-check research in `poc/
 |---|---|---|---|
 | 1 — Plagiarism (initial+extended) | 16+16 calls | ~$0.16 + ~$0.61 | **$0.77** |
 | 2 — AI Detection | 20+20 calls | $0.20 + $0.06 | **$0.26** |
-| 3 — Academic Citations | — | — | — |
+| 3 — Academic Citations | 10 OA + 10 Gem + ~100 judge | $0 + $0.38 + $0.30 | **$0.68** |
 | 4 — LLM Skills Swap | — | — | — |
-| **Total** | | | **$1.03 / $15.00 budget** |
+| **Total** | | | **$1.71 / $15.00 budget** |
 
 ---
 
@@ -151,15 +151,45 @@ Full results: `02-ai-detection/RESULTS.md`
 
 ---
 
-## POC 3 — Academic Citations (Semantic Scholar vs Gemini grounding)
+## POC 3 — Academic Citations (OpenAlex vs Gemini grounding)
 
-**Status:** Not started.
+**Status:** Complete. Verdict: **replace** (single-engine) or **augment** (hybrid)
+**Run date:** 2026-04-22
+**Baseline swapped:** Semantic Scholar → OpenAlex (SS free tier unusable from shared IPs — returned 429 on every call)
 
-_Results will be filled in after `bun poc-replacement/03-academic-citations/run.ts` completes._
+| Metric | OpenAlex | Gemini |
+|---|---|---|
+| Exact-gold Recall@3/@5 | 10% / 10% | **70% / 70%** |
+| Acceptable-support Recall@3/@5 | 80% / 80% | **100% / 100%** |
+| Avg latency/claim | **~1s** | ~63s (25–108s range) |
+| Cost/claim | **$0** | $0.038 |
 
-Corpus: 10 claims (4 medical, 3 scientific, 3 financial) with gold citations.
-Scoring: exact-gold Recall@3/5 and acceptable-support Recall@3/5 (dual metric).
-See: `03-academic-citations/RESULTS.md`
+**Key findings:**
+
+1. **Gemini wins big on exact-gold recall** — 7× better at finding the specific canonical
+   paper (Martineau 2017, Zinman 2015, Schuur 2015, etc.). OpenAlex's keyword-based search
+   often surfaces tangentially related papers instead of the classic citation.
+
+2. **Both engines score high on "any supportive peer-reviewed paper"** — Gemini 100%,
+   OpenAlex 80%. So OpenAlex is "good enough" for free-tier UX.
+
+3. **Semantic Scholar is effectively unusable on free tier** — every call from our IP
+   returned HTTP 429. Requires paid API key. OpenAlex is the operational replacement
+   for SS regardless of the Gemini question.
+
+4. **Gemini has high latency variance** — 25s to 108s per call, median ~55s. Earlier POC
+   run had 40% timeouts at 150s ceiling; investigation (`diagnose.ts`/`diagnose2.ts`)
+   showed the prompt is fine but Gemini's tail latency requires a 240s timeout + retry
+   on AbortError. Implication: don't use Gemini in a synchronous UI — async only.
+
+**Recommended architecture:**
+- Free tier: OpenAlex (instant, $0, 80% acceptable-support recall)
+- Premium tier: Gemini grounded as an async "deep citation search" feature (60s, $0.038,
+  70% exact-gold recall)
+- Do NOT replace Semantic Scholar without picking one of the above — SS free tier is
+  already broken
+
+Full results: `03-academic-citations/RESULTS.md`
 
 ---
 

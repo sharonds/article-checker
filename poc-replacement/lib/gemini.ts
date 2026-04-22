@@ -82,27 +82,37 @@ export interface GroundedResponse {
   searchQueries: string[];
 }
 
-/** Grounded call — high thinking + Google Search tool. Use for evidence-dependent assessment. */
+/** Grounded call — high thinking + Google Search tool. Use for evidence-dependent assessment.
+ *  Timeout: default 120s via AbortSignal; configurable via `timeoutMs`. */
 export async function callLlmGrounded(
   prompt: string,
-  attempt = 1
+  attempt = 1,
+  timeoutMs = 120_000
 ): Promise<GroundedResponse> {
-  const res = await fetch(
-    `${BASE}/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        tools: [{ google_search: {} }],
-        generationConfig: {
-          maxOutputTokens: 8192,
-          temperature: 0.1,
-          thinkingConfig: { thinkingLevel: "high" },
-        },
-      }),
-    }
-  );
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(
+      `${BASE}/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          tools: [{ google_search: {} }],
+          generationConfig: {
+            maxOutputTokens: 8192,
+            temperature: 0.1,
+            thinkingConfig: { thinkingLevel: "high" },
+          },
+        }),
+        signal: controller.signal,
+      }
+    );
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (!res.ok) {
     if ((res.status === 500 || res.status === 503) && attempt <= 2) {
