@@ -240,7 +240,7 @@ async function fetchGroundedAssessment(
   let response: Response;
   try {
     response = await fetch(
-      `${GEMINI_BASE_URL}/${model}:generateContent?key=${apiKey}`,
+      `${GEMINI_BASE_URL}/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

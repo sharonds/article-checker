@@ -75,7 +75,7 @@ function createGeminiCaller(apiKey: string, model: string): LlmClient["call"] {
   return async (prompt: string, maxTokens = 1024) => {
     assertMocksOnly("llm:gemini");
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
