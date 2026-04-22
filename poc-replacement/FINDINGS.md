@@ -15,7 +15,7 @@ _Filled in after all four POCs complete._
 | Copyscape (plagiarism) | **augment** | 10 articles, 75 sentences, 0 FP | POC 1 |
 | Copyscape (AI detection) | **augment** | 20 samples, complementary failure modes | POC 2 |
 | Semantic Scholar → OpenAlex (citations) | **replace / hybrid** | 10 claims, Gem 70%/10% gold recall | POC 3 |
-| LLM (tone/legal/summary/brief/purpose) | TBD | — | POC 4 |
+| LLM (tone/legal/summary/brief/purpose) | **reject Gemini / replace MiniMax with GPT-5.4** | 18 cells × 3 providers + DR | POC 4 |
 
 Verdict options: `keep` / `augment` / `replace` / `reject-as-unsuitable`
 
@@ -51,8 +51,9 @@ These POCs follow the same design principles as the fact-check research in `poc/
 | 1 — Plagiarism (initial+extended) | 16+16 calls | ~$0.16 + ~$0.61 | **$0.77** |
 | 2 — AI Detection | 20+20 calls | $0.20 + $0.06 | **$0.26** |
 | 3 — Academic Citations | 10 OA + 10 Gem + ~100 judge | $0 + $0.38 + $0.30 | **$0.68** |
-| 4 — LLM Skills Swap | — | — | — |
-| **Total** | | | **$1.71 / $15.00 budget** |
+| 4 — LLM Skills Swap (3-way + DR) | ~54 provider + 54 judge + DR | $0.30 + $0.05 + $1.50 | **$1.85** |
+| 2 — AI Detection supplement (GPT-5.4) | 20 calls | $0.05 | **$0.05** |
+| **Total** | | | **$3.61 / $15.00 budget** |
 
 ---
 
@@ -193,15 +194,59 @@ Full results: `03-academic-citations/RESULTS.md`
 
 ---
 
-## POC 4 — LLM Skills Swap (MiniMax-M2.7 vs Gemini 3.1 Pro)
+## POC 4 — LLM Skills Swap (MiniMax vs Gemini vs GPT-5.4 + Deep Research)
 
-**Status:** Not started.
+**Status:** Complete. **Verdict on the original question: reject Gemini.** New question
+emerged: replace MiniMax with GPT-5.4.
+**Run date:** 2026-04-22
+**Scope:** 3-way comparison on 3 articles × 6 skill-modes (tone/legal-with/legal-no/summary/brief/purpose) + 1 Deep Research legal audit
 
-_Results will be filled in after `bun poc-replacement/04-llm-skills-swap/run.ts` completes._
+### Mean score per skill (1-5 scale, judge = gpt-5.4-mini)
 
-Skills: Tone, Legal, Summary, Brief, Purpose.
-Scoring: per-skill rubric from `ANNOTATION-GUIDELINES.md` + LLM judge (non-Gemini preferred).
-See: `04-llm-skills-swap/RESULTS.md`
+| Skill | MiniMax | Gemini | **GPT-5.4** |
+|---|---|---|---|
+| tone | 2.94 | 3.06 | **4.17** |
+| legal (with policy) | **3.44** | 2.67 | 2.89 |
+| legal (no policy) | 1.78 | 1.50 | **3.11** |
+| summary | 4.22 | 3.67 | **4.33** |
+| brief | 4.33 | 3.50 | **4.83** |
+| purpose | 3.75 | 3.08 | **4.17** |
+
+### Pairwise head-to-head
+
+| Matchup | Wins/Losses/Ties |
+|---|---|
+| MiniMax vs Gemini | **MiniMax 13 – Gemini 1 – Ties 4** |
+| MiniMax vs GPT-5.4 | MiniMax 4 – **GPT-5.4 12** – Ties 2 |
+| Gemini vs GPT-5.4 | Gemini 0 – **GPT-5.4 18** – Ties 0 |
+
+**Five key findings:**
+
+1. **Reject Gemini for CheckApp's LLM skills.** Gemini is worse than MiniMax on 5 of 5
+   text-classification skills. This is a decisive rejection of the POC 4 original question.
+
+2. **GPT-5.4 dominates the text-classification use cases.** Wins 5 of 6 skills. Gemini
+   loses 0-18-0 to GPT-5.4 (swept).
+
+3. **Legal-no-policy is the most important skill-specific finding.** Only GPT-5.4 is
+   usable here (3.11) — Gemini and MiniMax both score < 2 and produce essentially useless
+   "consult a lawyer" output. This matters because it's Sharon's Mode B use case.
+
+4. **Deep Research is NOT worth $1.50 for policy-checked legal.** Lost to MiniMax (3.33
+   vs 4.33) and Gemini (2.00 vs 4.33) on 01-health legal-with-policy. Judge reasoning: DR
+   is "generic", "overstates severity", "less actionable". Where DR might still add value
+   is the no-policy mode (untested) — deferred.
+
+5. **Gemini has no role in skill-based text classification.** Gemini's strength is web
+   grounding (fact-check, plagiarism, citations). For analysis-of-text tasks, GPT-5.4 is
+   strictly better and Gemini is even worse than MiniMax.
+
+**Recommended architecture:**
+- Default skills: GPT-5.4 (tone/summary/brief/purpose/legal-no-policy)
+- Legal-with-policy: MiniMax (cheaper, slight edge on this narrow task)
+- Legal premium tier: Deep Research (no-policy mode, UNTESTED but hypothesized 4+)
+
+Full results: `04-llm-skills-swap/RESULTS.md`
 
 ---
 

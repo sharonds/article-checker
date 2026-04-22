@@ -200,6 +200,73 @@ None. All 20 sample labels held after running both engines.
 
 ---
 
+## Update (2026-04-22): 3-way with GPT-5.4
+
+Prompted by the POC 4 finding that GPT-5.4 outperforms both MiniMax and Gemini on several
+text-classification skills, we added GPT-5.4 as a third AI detector on the same 20-sample
+corpus.
+
+### 3-way aggregate
+
+| Metric | Copyscape | Gemini | **GPT-5.4** |
+|---|---|---|---|
+| Accuracy | 90.0% | 80.0% | **90.0%** (tied with Copyscape) |
+| Recall | **100.0%** | 60.0% | 80.0% |
+| Precision | 83.3% | **100.0%** | **100.0%** |
+| F1 | **90.9%** | 75.0% | 88.9% |
+| Spearman calibration | **0.896** | 0.747 | 0.875 |
+
+### Accuracy by provenance (where provider differences matter)
+
+| Provenance (n=5) | Copyscape | Gemini | GPT-5.4 |
+|---|---|---|---|
+| pure-human | 5/5 | 5/5 | 5/5 |
+| pure-ai | 5/5 | 5/5 | 5/5 |
+| **ai-then-edited** | **5/5** | 1/5 | 3/5 |
+| **human-then-polished** | 3/5 (2 FP) | **5/5** | **5/5** |
+
+### Finding: GPT-5.4 is a strictly better secondary signal than Gemini
+
+GPT-5.4 caught **2 of the 4 AI-edited samples that tricked Gemini** (M2 cooking, M4 budget).
+Still missed M3 hiking and M5 learning — samples with the heaviest personal-anecdote
+content. But GPT-5.4's failure mode is a **subset** of Gemini's failure mode, with two fewer
+misses.
+
+Combined with:
+- Same 100% precision on HUMAN content (never FPs)
+- 80% recall vs Gemini's 60% (better at catching AI)
+- Calibration 0.875 vs 0.747 (probability scores track actual AI % much more reliably)
+
+**Updated hybrid recommendation:** Use Copyscape + **GPT-5.4** (not Gemini) for the 4-state
+signal described above:
+- Both-AI: definitive AI (6-8 cases)
+- CS-AI + GPT-HUMAN: AI-generated with humanizing edits (2 cases with GPT vs 4 with Gemini)
+- CS-HUMAN + GPT-AI: never happened in this corpus
+- Both-HUMAN: definitive HUMAN
+
+The Copyscape-FP zone (2 cases of human-polished content) is caught by GPT-5.4 same as Gemini.
+GPT-5.4 just adds two more AI-edited catches on top.
+
+### Cost comparison
+
+| | Cost/sample |
+|---|---|
+| Copyscape | $0.010 |
+| Gemini | $0.003 |
+| **GPT-5.4** | **$0.0025** (for this task) |
+
+GPT-5.4 is actually slightly CHEAPER than Gemini for classification (shorter outputs, no
+grounding). The cost objection that would have made GPT-5.4 unviable doesn't apply here.
+
+### Revised verdict
+
+**augment (unchanged)**, but the **secondary signal should be GPT-5.4, not Gemini**.
+
+Full 3-way results JSON: `poc-replacement/02-ai-detection/results-3way-1776861078525.json`
+
+---
+
 ## Raw Data
 
 Results JSON: `poc-replacement/02-ai-detection/results-1776847060642.json`
+3-way update JSON: `poc-replacement/02-ai-detection/results-3way-1776861078525.json`
