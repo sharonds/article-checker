@@ -82,7 +82,9 @@ function createGeminiCaller(apiKey: string, model: string): LlmClient["call"] {
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            maxOutputTokens: Math.max(maxTokens, 8192),
+            // Respect caller's token budget; cap at 8192 so a large request
+            // doesn't produce runaway cost. Callers needing more should split.
+            maxOutputTokens: Math.min(maxTokens, 8192),
             temperature: 0.1,
             thinkingConfig: { thinkingLevel: "low" },
           },
