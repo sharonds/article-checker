@@ -224,6 +224,36 @@ describe("buildDashboardSummary", () => {
     expect(summary.overallAvg).toBe(91);
     expect(summary.days.find((day) => day.shortDate === "Apr 18")?.cost).toBeCloseTo(0.77);
   });
+
+  it("month + day buckets are UTC — not affected by host timezone", () => {
+    // "now" is UTC midnight on the 1st. A host timezone east of UTC would
+    // previously resolve monthStart to the 30th of the prior month and bucket
+    // a check on Apr 1 UTC into the Apr 30 label. Verify both are UTC-pinned.
+    const now = new Date("2026-05-01T00:00:00.000Z");
+    const checks: Check[] = [
+      {
+        id: 1,
+        source: "apr-30-utc.md",
+        wordCount: 100,
+        resultsJson: JSON.stringify([{ score: 80, verdict: "pass" }]),
+        totalCost: 0.5,
+        createdAt: "2026-04-30T23:30:00.000Z",
+      },
+      {
+        id: 2,
+        source: "may-01-utc.md",
+        wordCount: 100,
+        resultsJson: JSON.stringify([{ score: 80, verdict: "pass" }]),
+        totalCost: 0.25,
+        createdAt: "2026-05-01T00:30:00.000Z",
+      },
+    ];
+
+    const summary = buildDashboardSummary(checks, now);
+    expect(summary.checksThisMonth).toBe(1);
+    expect(summary.days.find((d) => d.shortDate === "May 1")?.cost).toBeCloseTo(0.25);
+    expect(summary.days.find((d) => d.shortDate === "Apr 30")?.cost).toBeCloseTo(0.5);
+  });
 });
 
 describe("tags", () => {

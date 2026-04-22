@@ -174,12 +174,19 @@ export interface DashboardSummary {
   maxCost: number;
 }
 
+// UTC-pinned so bucket labels match the UTC createdAt timestamps SQLite writes
+// via datetime('now'). Without timeZone:"UTC" the label drifts relative to the
+// bucket near midnight in non-UTC timezones.
 function getDayLabel(date: Date): string {
-  return date.toLocaleDateString("en-US", { weekday: "short" });
+  return date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
 }
 
 function formatDateShort(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function getVerdict(score: number): "pass" | "warn" | "fail" {
@@ -234,15 +241,20 @@ export function buildDashboardSummary(checks: Check[], now = new Date()): Dashbo
     verdictCounts[p.verdict]++;
   }
 
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  // UTC-pinned month start so the comparison is UTC vs UTC (createdAt is
+  // produced by SQLite datetime('now') which is UTC). Local-time constructors
+  // drift by ±1 day for users east of UTC near month boundaries.
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
     .toISOString()
     .slice(0, 10);
   const checksThisMonth = checks.filter((c) => c.createdAt >= monthStart).length;
 
   const days: Array<{ label: string; shortDate: string; cost: number }> = [];
+  // Walk backwards from today in UTC so day-keys line up with createdAt's UTC
+  // timestamps. setUTCDate keeps arithmetic in UTC instead of local time.
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now);
-    d.setDate(d.getDate() - i);
+    d.setUTCDate(d.getUTCDate() - i);
     const dateStr = d.toISOString().slice(0, 10);
     const cost = checks.reduce(
       (sum, c) => (c.createdAt.startsWith(dateStr) ? sum + c.totalCost : sum),
