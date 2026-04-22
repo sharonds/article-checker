@@ -6,8 +6,10 @@ import type { SkillResult } from "./skills/types.ts";
 
 const DB_DIR = join(homedir(), ".checkapp");
 // CHECKAPP_DB_PATH lets tests and E2E harnesses redirect the default DB to a
-// temp file. Callers that pass an explicit path still override this.
-const DB_PATH = process.env.CHECKAPP_DB_PATH ?? join(DB_DIR, "history.db");
+// temp file. Resolved dynamically so tests can set the env var after load.
+function dbPath(): string {
+  return process.env.CHECKAPP_DB_PATH ?? join(DB_DIR, "history.db");
+}
 
 export type DB = Database;
 
@@ -48,7 +50,7 @@ export interface InsertDeepAuditInput {
   costEstimateUsd?: number;
 }
 
-export function openDb(path = DB_PATH): DB {
+export function openDb(path = dbPath()): DB {
   if (path !== ":memory:") {
     mkdirSync(dirname(path), { recursive: true });
   }
